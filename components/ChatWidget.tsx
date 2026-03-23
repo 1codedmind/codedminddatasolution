@@ -89,12 +89,14 @@ export default function ChatWidget() {
         );
       }
 
+      const assistantMessage = data.message;
+
       setMessages((current) => [
         ...current,
         {
           id: `assistant-${Date.now()}`,
           role: "assistant",
-          text: data.message,
+          text: assistantMessage,
         },
       ]);
     } catch (caughtError) {
