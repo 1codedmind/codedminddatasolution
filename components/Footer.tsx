@@ -1,3 +1,5 @@
+import { Database, Mail, MapPin } from "lucide-react";
+
 const footerLinks = [
   { label: "Home", href: "#" },
   { label: "Services", href: "#services" },
@@ -6,33 +8,52 @@ const footerLinks = [
   { label: "Contact", href: "#cta" },
 ];
 
+const services = [
+  "Data Engineering",
+  "Cloud Data Solutions",
+  "Reporting & Dashboards",
+  "Data Automation",
+  "Custom Data Products",
+];
+
 export default function Footer() {
   return (
-    <footer className="bg-gray-900 text-gray-400">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Brand */}
-          <div className="space-y-3">
-            <h3 className="text-white font-bold text-lg">
-              Coded Mind <span className="text-blue-400">Data Solution</span>
-            </h3>
-            <p className="text-sm leading-relaxed">
+    <footer className="bg-stone-950 text-stone-400">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-8">
+        {/* Top grid */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-10 pb-10 border-b border-stone-800">
+          {/* Brand column */}
+          <div className="md:col-span-4 space-y-4">
+            <a href="#" className="inline-flex items-center gap-2.5">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-amber-600">
+                <Database size={15} className="text-white" />
+              </div>
+              <span className="text-[15px] font-bold text-white tracking-tight">
+                Coded Mind{" "}
+                <span className="text-amber-400">Data Solution</span>
+              </span>
+            </a>
+            <p className="text-sm text-stone-400 leading-relaxed max-w-xs">
               We help businesses design data pipelines, automate reporting, and
               build custom data products using modern cloud technologies.
             </p>
+            <div className="flex items-center gap-2 text-sm text-stone-500">
+              <MapPin size={13} />
+              Available for remote projects worldwide
+            </div>
           </div>
 
           {/* Navigation */}
-          <div>
-            <h4 className="text-white font-semibold text-sm mb-4 uppercase tracking-wider">
+          <div className="md:col-span-3 md:col-start-6">
+            <h4 className="text-xs font-semibold text-stone-300 uppercase tracking-widest mb-4">
               Navigation
             </h4>
-            <ul className="space-y-2">
+            <ul className="space-y-2.5">
               {footerLinks.map((link) => (
                 <li key={link.label}>
                   <a
                     href={link.href}
-                    className="text-sm hover:text-blue-400 transition-colors"
+                    className="text-sm text-stone-400 hover:text-white transition-colors"
                   >
                     {link.label}
                   </a>
@@ -41,28 +62,46 @@ export default function Footer() {
             </ul>
           </div>
 
+          {/* Services */}
+          <div className="md:col-span-3">
+            <h4 className="text-xs font-semibold text-stone-300 uppercase tracking-widest mb-4">
+              Services
+            </h4>
+            <ul className="space-y-2.5">
+              {services.map((s) => (
+                <li key={s}>
+                  <a
+                    href="#services"
+                    className="text-sm text-stone-400 hover:text-white transition-colors"
+                  >
+                    {s}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
           {/* Contact */}
-          <div>
-            <h4 className="text-white font-semibold text-sm mb-4 uppercase tracking-wider">
+          <div className="md:col-span-2 md:col-start-11">
+            <h4 className="text-xs font-semibold text-stone-300 uppercase tracking-widest mb-4">
               Contact
             </h4>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <a
-                  href="mailto:hello@codedmind.io"
-                  className="hover:text-blue-400 transition-colors"
-                >
-                  hello@codedmind.io
-                </a>
-              </li>
-              <li className="text-gray-500">Available for remote projects worldwide</li>
-            </ul>
+            <a
+              href="mailto:hello@codedmind.io"
+              className="inline-flex items-center gap-2 text-sm text-stone-400 hover:text-amber-400 transition-colors"
+            >
+              <Mail size={13} />
+              hello@codedmind.io
+            </a>
           </div>
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-10 pt-6 border-t border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-600">
-          <p>&copy; {new Date().getFullYear()} Coded Mind Data Solution. All rights reserved.</p>
+        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-stone-600">
+          <p>
+            &copy; {new Date().getFullYear()} Coded Mind Data Solution. All
+            rights reserved.
+          </p>
           <p>Built with precision. Powered by data.</p>
         </div>
       </div>

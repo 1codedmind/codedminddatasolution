@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Database } from "lucide-react";
 
 const navLinks = [
   { label: "Home", href: "#" },
@@ -15,43 +15,46 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
+    <header className="sticky top-0 z-50 bg-[#fcfaf6]/90 backdrop-blur-md border-b border-stone-200/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <a href="#" className="flex items-center gap-2">
-            <span className="text-lg font-bold text-gray-900 leading-tight">
+          <a href="#" className="flex items-center gap-2.5 shrink-0">
+            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-amber-600 shadow-sm shadow-amber-200/70">
+              <Database size={15} className="text-white" />
+            </div>
+            <span className="text-[15px] font-bold text-slate-900 tracking-tight">
               Coded Mind{" "}
-              <span className="text-blue-600">Data Solution</span>
+              <span className="text-amber-700">Data Solution</span>
             </span>
           </a>
 
-          {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-8">
+          {/* Desktop nav links */}
+          <nav className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => (
               <a
                 key={link.label}
                 href={link.href}
-                className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors"
+                className="px-3.5 py-2 text-sm font-medium text-stone-600 hover:text-stone-950 hover:bg-stone-100 rounded-lg transition-all duration-150"
               >
                 {link.label}
               </a>
             ))}
           </nav>
 
-          {/* CTA button */}
+          {/* Desktop CTA */}
           <div className="hidden md:block">
             <a
               href="#cta"
-              className="inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+              className="inline-flex items-center px-5 py-2 text-sm font-semibold text-white bg-amber-600 rounded-full hover:bg-amber-700 transition-colors shadow-sm shadow-amber-200/70"
             >
               Book a Consultation
             </a>
           </div>
 
-          {/* Mobile menu toggle */}
+          {/* Mobile hamburger */}
           <button
-            className="md:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+            className="md:hidden p-2 rounded-lg text-stone-500 hover:text-stone-950 hover:bg-stone-100 transition-colors"
             onClick={() => setMenuOpen(!menuOpen)}
             aria-label="Toggle menu"
           >
@@ -60,28 +63,28 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile drawer */}
       {menuOpen && (
-        <div className="md:hidden border-t border-gray-100 bg-white px-4 pb-4 pt-2">
-          <nav className="flex flex-col gap-1">
+        <div className="md:hidden bg-[#fcfaf6] border-t border-stone-200 px-4 pt-3 pb-5">
+          <nav className="flex flex-col gap-0.5 mb-4">
             {navLinks.map((link) => (
               <a
                 key={link.label}
                 href={link.href}
                 onClick={() => setMenuOpen(false)}
-                className="py-2 text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
+                className="px-3 py-2.5 text-sm font-medium text-stone-700 hover:text-amber-700 hover:bg-stone-100 rounded-lg transition-colors"
               >
                 {link.label}
               </a>
             ))}
-            <a
-              href="#cta"
-              onClick={() => setMenuOpen(false)}
-              className="mt-3 inline-flex justify-center items-center px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Book a Consultation
-            </a>
           </nav>
+          <a
+            href="#cta"
+            onClick={() => setMenuOpen(false)}
+            className="flex items-center justify-center w-full px-4 py-2.5 text-sm font-semibold text-white bg-amber-600 rounded-full hover:bg-amber-700 transition-colors"
+          >
+            Book a Consultation
+          </a>
         </div>
       )}
     </header>

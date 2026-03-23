@@ -48,36 +48,39 @@ const services = [
 
 export default function Services() {
   return (
-    <section id="services" className="bg-gray-50 py-20">
+    <section id="services" className="bg-stone-100/70 py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section header */}
-        <div className="max-w-2xl mb-12">
-          <p className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-2">
-            What We Do
-          </p>
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
-            End-to-End Data Services
-          </h2>
-          <p className="mt-4 text-gray-500 text-lg">
+        {/* Section header — split layout */}
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-14">
+          <div>
+            <p className="text-xs font-semibold text-amber-700 uppercase tracking-widest mb-3">
+              What We Do
+            </p>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight">
+              End-to-End Data Services
+            </h2>
+          </div>
+          <p className="text-stone-600 text-base max-w-sm md:text-right leading-relaxed">
             From raw data to actionable insights — we cover the full spectrum of
             modern data engineering.
           </p>
         </div>
 
         {/* Cards grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {services.map(({ icon: Icon, title, description }) => (
             <div
               key={title}
-              className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+              className="group bg-white rounded-2xl p-6 border border-stone-200/80 shadow-sm hover:shadow-md hover:border-amber-200 hover:-translate-y-0.5 transition-all duration-200"
             >
-              <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-blue-50 text-blue-600 mb-4">
+              {/* Icon container */}
+              <div className="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-amber-50 text-amber-700 mb-5 group-hover:bg-amber-600 group-hover:text-white transition-all duration-200">
                 <Icon size={20} />
               </div>
-              <h3 className="text-base font-semibold text-gray-900 mb-2">
+              <h3 className="text-[15px] font-semibold text-slate-900 mb-2">
                 {title}
               </h3>
-              <p className="text-sm text-gray-500 leading-relaxed">
+              <p className="text-sm text-stone-600 leading-relaxed">
                 {description}
               </p>
             </div>
