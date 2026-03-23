@@ -1,14 +1,16 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { Menu, X, Database } from "lucide-react";
 
 const navLinks = [
-  { label: "Home", href: "#" },
-  { label: "Services", href: "#services" },
-  { label: "Solutions", href: "#solutions" },
-  { label: "About", href: "#why-us" },
-  { label: "Contact", href: "#cta" },
+  { label: "Home", href: "/" },
+  { label: "Services", href: "/#services" },
+  { label: "Solutions", href: "/#solutions" },
+  { label: "About", href: "/#why-us" },
+  { label: "Careers", href: "/careers" },
+  { label: "Contact", href: "/#cta" },
 ];
 
 export default function Navbar() {
@@ -19,7 +21,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <a href="#" className="flex items-center gap-2.5 shrink-0">
+          <Link href="/" className="flex items-center gap-2.5 shrink-0">
             <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-amber-600 shadow-sm shadow-amber-200/70">
               <Database size={15} className="text-white" />
             </div>
@@ -27,29 +29,29 @@ export default function Navbar() {
               Coded Mind{" "}
               <span className="text-amber-700">Data Solution</span>
             </span>
-          </a>
+          </Link>
 
           {/* Desktop nav links */}
           <nav className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => (
-              <a
+              <Link
                 key={link.label}
                 href={link.href}
                 className="px-3.5 py-2 text-sm font-medium text-stone-600 hover:text-stone-950 hover:bg-stone-100 rounded-lg transition-all duration-150"
               >
                 {link.label}
-              </a>
+              </Link>
             ))}
           </nav>
 
           {/* Desktop CTA */}
           <div className="hidden md:block">
-            <a
-              href="#cta"
+            <Link
+              href="/#cta"
               className="inline-flex items-center px-5 py-2 text-sm font-semibold text-white bg-amber-600 rounded-full hover:bg-amber-700 transition-colors shadow-sm shadow-amber-200/70"
             >
               Book a Consultation
-            </a>
+            </Link>
           </div>
 
           {/* Mobile hamburger */}
@@ -68,23 +70,23 @@ export default function Navbar() {
         <div className="md:hidden bg-[#fcfaf6] border-t border-stone-200 px-4 pt-3 pb-5">
           <nav className="flex flex-col gap-0.5 mb-4">
             {navLinks.map((link) => (
-              <a
+              <Link
                 key={link.label}
                 href={link.href}
                 onClick={() => setMenuOpen(false)}
                 className="px-3 py-2.5 text-sm font-medium text-stone-700 hover:text-amber-700 hover:bg-stone-100 rounded-lg transition-colors"
               >
                 {link.label}
-              </a>
+              </Link>
             ))}
           </nav>
-          <a
-            href="#cta"
+          <Link
+            href="/#cta"
             onClick={() => setMenuOpen(false)}
             className="flex items-center justify-center w-full px-4 py-2.5 text-sm font-semibold text-white bg-amber-600 rounded-full hover:bg-amber-700 transition-colors"
           >
             Book a Consultation
-          </a>
+          </Link>
         </div>
       )}
     </header>

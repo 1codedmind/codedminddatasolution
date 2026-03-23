@@ -1,11 +1,13 @@
+import Link from "next/link";
 import { Database, Mail, MapPin } from "lucide-react";
 
 const footerLinks = [
-  { label: "Home", href: "#" },
-  { label: "Services", href: "#services" },
-  { label: "Solutions", href: "#solutions" },
-  { label: "About", href: "#why-us" },
-  { label: "Contact", href: "#cta" },
+  { label: "Home", href: "/" },
+  { label: "Services", href: "/#services" },
+  { label: "Solutions", href: "/#solutions" },
+  { label: "About", href: "/#why-us" },
+  { label: "Careers", href: "/careers" },
+  { label: "Contact", href: "/#cta" },
 ];
 
 const services = [
@@ -24,7 +26,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10 pb-10 border-b border-stone-800">
           {/* Brand column */}
           <div className="md:col-span-4 space-y-4">
-            <a href="#" className="inline-flex items-center gap-2.5">
+            <Link href="/" className="inline-flex items-center gap-2.5">
               <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-amber-600">
                 <Database size={15} className="text-white" />
               </div>
@@ -32,7 +34,7 @@ export default function Footer() {
                 Coded Mind{" "}
                 <span className="text-amber-400">Data Solution</span>
               </span>
-            </a>
+            </Link>
             <p className="text-sm text-stone-400 leading-relaxed max-w-xs">
               We help businesses design data pipelines, automate reporting, and
               build custom data products using modern cloud technologies.
@@ -51,12 +53,12 @@ export default function Footer() {
             <ul className="space-y-2.5">
               {footerLinks.map((link) => (
                 <li key={link.label}>
-                  <a
+                  <Link
                     href={link.href}
                     className="text-sm text-stone-400 hover:text-white transition-colors"
                   >
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -70,12 +72,12 @@ export default function Footer() {
             <ul className="space-y-2.5">
               {services.map((s) => (
                 <li key={s}>
-                  <a
-                    href="#services"
+                  <Link
+                    href="/#services"
                     className="text-sm text-stone-400 hover:text-white transition-colors"
                   >
                     {s}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -87,11 +89,11 @@ export default function Footer() {
               Contact
             </h4>
             <a
-              href="mailto:hello@codedmind.io"
+              href="mailto:hr@codedmind.co.in"
               className="inline-flex items-center gap-2 text-sm text-stone-400 hover:text-amber-400 transition-colors"
             >
               <Mail size={13} />
-              hello@codedmind.io
+              hr@codedmind.co.in
             </a>
           </div>
         </div>

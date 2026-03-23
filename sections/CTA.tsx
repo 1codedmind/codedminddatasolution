@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ArrowRight, Mail } from "lucide-react";
 
 export default function CTA() {
@@ -29,19 +30,25 @@ export default function CTA() {
             {/* CTA buttons */}
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <a
-                href="mailto:hello@codedmind.io"
+                href="mailto:hr@codedmind.co.in"
                 className="inline-flex items-center justify-center gap-2 px-7 py-3.5 text-sm font-semibold text-stone-900 bg-white rounded-full hover:bg-amber-50 transition-all shadow-md"
               >
                 <Mail size={15} />
-                Get in Touch
+                Email Us
               </a>
-              <a
-                href="#services"
+              <Link
+                href="/careers"
+                className="inline-flex items-center justify-center gap-2 px-7 py-3.5 text-sm font-semibold text-stone-900 bg-amber-100 rounded-full hover:bg-amber-200 transition-all shadow-md"
+              >
+                Current Openings
+              </Link>
+              <Link
+                href="/#services"
                 className="inline-flex items-center justify-center gap-2 px-7 py-3.5 text-sm font-semibold text-white border border-stone-500 rounded-full hover:border-amber-300 hover:bg-white/5 transition-all"
               >
                 View Our Services
                 <ArrowRight size={15} />
-              </a>
+              </Link>
             </div>
 
             {/* Trust note */}

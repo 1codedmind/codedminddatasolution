@@ -51,7 +51,7 @@ export default function Process() {
               className="relative bg-white rounded-2xl p-7 border border-stone-200/80 shadow-sm"
             >
               {/* Large number — decorative */}
-              <p className="text-5xl font-black text-stone-100 leading-none mb-4 select-none">
+              <p className="text-5xl font-black text-stone-300 leading-none mb-4 select-none">
                 {number}
               </p>
               {/* Step indicator dot */}
