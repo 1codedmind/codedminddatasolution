@@ -33,3 +33,23 @@ export function validatePassword(value: string) {
 
   return isStrong ? password : null;
 }
+
+export function getSignupValidationError(input: {
+  fullName?: string;
+  email?: string;
+  password?: string;
+}) {
+  if (!validateFullName(input.fullName ?? "")) {
+    return "Please enter a valid full name.";
+  }
+
+  if (!validateEmail(input.email ?? "")) {
+    return "Please enter a valid email address.";
+  }
+
+  if (!validatePassword(input.password ?? "")) {
+    return `Password must be ${PASSWORD_LIMITS.min}-${PASSWORD_LIMITS.max} characters and include uppercase, lowercase, number, and special character.`;
+  }
+
+  return null;
+}

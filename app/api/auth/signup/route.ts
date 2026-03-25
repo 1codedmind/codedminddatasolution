@@ -6,7 +6,12 @@ import { createSessionToken, getSessionCookieOptions } from "@/lib/auth/session"
 import { getClientIp, isTrustedOrigin, normalizeEmail } from "@/lib/auth/security";
 import { enforceRateLimit } from "@/lib/auth/rate-limit";
 import { createCandidateUser } from "@/lib/auth/users";
-import { validateEmail, validateFullName, validatePassword } from "@/lib/auth/validation";
+import {
+  getSignupValidationError,
+  validateEmail,
+  validateFullName,
+  validatePassword,
+} from "@/lib/auth/validation";
 
 export async function POST(request: NextRequest) {
   if (!isTrustedOrigin(request)) {
@@ -25,6 +30,7 @@ export async function POST(request: NextRequest) {
   const fullName = validateFullName(body.fullName ?? "");
   const email = validateEmail(body.email ?? "");
   const password = validatePassword(body.password ?? "");
+  const validationError = getSignupValidationError(body);
 
   const rateLimitKey = `signup:${ip}:${normalizeEmail(body.email ?? "")}`;
   const allowed = enforceRateLimit(
@@ -40,9 +46,9 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (!fullName || !email || !password) {
+  if (validationError || !fullName || !email || !password) {
     return NextResponse.json(
-      { error: "Please provide a valid name, email, and strong password." },
+      { error: validationError ?? "Please provide valid signup details." },
       { status: 400 },
     );
   }

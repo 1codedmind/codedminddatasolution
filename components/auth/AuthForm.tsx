@@ -148,6 +148,12 @@ export default function AuthForm({ mode }: AuthFormProps) {
                   className="w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500 focus:ring-4 focus:ring-amber-100"
                   placeholder="Use 12+ chars with uppercase, lowercase, number, symbol"
                 />
+                {mode === "signup" ? (
+                  <p className="mt-2 text-xs leading-relaxed text-stone-500">
+                    Use 12-72 characters with at least one uppercase letter, one
+                    lowercase letter, one number, and one special character.
+                  </p>
+                ) : null}
               </div>
 
               {error ? (
