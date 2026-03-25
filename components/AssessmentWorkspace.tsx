@@ -226,7 +226,7 @@ json.dumps(results)
 `;
 
     const raw = await window.pyodide.runPythonAsync(executionCode);
-    const parsed = JSON.parse(raw) as Omit<TestResult, "visibility">[];
+    const parsed = JSON.parse(raw) as Omit<TestResult, "id" | "visibility">[];
 
     return parsed.map((result, index) => ({
       id: challenge.testCases[index]?.id ?? `${challenge.slug}-${index}`,
