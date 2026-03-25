@@ -43,6 +43,7 @@ Website guidance:
 - Help prospective clients understand the services, process, and how to contact the company.
 - Help job seekers understand current openings, eligibility, required skills, and how to apply.
 - For job applications, direct users to the careers pages and mention that applications are sent by email with resume attachment.
+- Mention that the website also has a coding assessment area for Python and SQL challenges with browser-based test execution.
 - If the website does not clearly contain an answer, say so instead of inventing facts.
 `.trim();
 }

@@ -1,0 +1,12 @@
+slug,title,category,difficulty,summary,instructions,starter_code,function_name,setup_sql
+python-sum-even-numbers,Sum Even Numbers,python,Easy,Write a Python function that returns the sum of all even numbers in a list.,"Implement the function `sum_even_numbers(nums)`.||Return the sum of all even integers in the input list.||If there are no even numbers, return `0`.","def sum_even_numbers(nums):
+    # Write your solution here
+    return 0
+",sum_even_numbers,
+sql-top-customers,Top Customers by Order Count,sql,Medium,Write a SQL query that returns each customer and how many orders they placed.,"Use the `customers` and `orders` tables provided in the test database.||Return two columns: `customer_name` and `order_count`.||Sort by `order_count` descending, then `customer_name` ascending.","SELECT
+  c.name AS customer_name,
+  COUNT(o.id) AS order_count
+FROM customers c
+JOIN orders o ON o.customer_id = c.id
+GROUP BY c.name
+ORDER BY order_count DESC, customer_name ASC;",,"CREATE TABLE customers (id INT, name STRING)||CREATE TABLE orders (id INT, customer_id INT, order_total INT)||INSERT INTO customers VALUES (1, 'Aarav'), (2, 'Mira'), (3, 'Zoya')||INSERT INTO orders VALUES (101, 1, 1200), (102, 1, 800), (103, 2, 500), (104, 1, 400), (105, 3, 950), (106, 3, 300)"

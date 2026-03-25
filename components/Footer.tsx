@@ -7,6 +7,7 @@ const footerLinks = [
   { label: "Solutions", href: "/#solutions" },
   { label: "About", href: "/#why-us" },
   { label: "Careers", href: "/careers" },
+  { label: "Candidate Portal", href: "/candidate" },
   { label: "Contact", href: "/#cta" },
 ];
 
