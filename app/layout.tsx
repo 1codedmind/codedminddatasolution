@@ -57,6 +57,7 @@ export const metadata: Metadata = {
   },
   alternates: { canonical: BASE },
   robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
+  verification: { google: "84qSQOAP2QMH4TuIWXY0hwgvKUq3CfYwRzewks_hzRo" },
 };
 
 export default async function RootLayout({
