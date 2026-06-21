@@ -1,4 +1,5 @@
 import Hero from "@/sections/Hero";
+import ToolsSection from "@/sections/Tools";
 import Services from "@/sections/Services";
 import Solutions from "@/sections/Solutions";
 import WhyUs from "@/sections/WhyUs";
@@ -9,6 +10,7 @@ export default function Home() {
   return (
     <main>
       <Hero />
+      <ToolsSection />
       <Services />
       <Solutions />
       <WhyUs />

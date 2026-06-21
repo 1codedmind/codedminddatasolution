@@ -1,6 +1,26 @@
 import { NextRequest } from "next/server";
 
-const TRUSTED_HOSTS = new Set(["localhost:3000", "127.0.0.1:3000"]);
+const DEV_HOSTS = new Set(["localhost:3000", "127.0.0.1:3000"]);
+
+function trustedHosts(): Set<string> {
+  const hosts = new Set(DEV_HOSTS);
+
+  // Vercel sets this automatically on every deployment
+  if (process.env.VERCEL_URL) {
+    hosts.add(process.env.VERCEL_URL);
+  }
+
+  // Set NEXT_PUBLIC_APP_URL to your custom domain in Vercel env vars
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    try {
+      hosts.add(new URL(process.env.NEXT_PUBLIC_APP_URL).host);
+    } catch {
+      // ignore malformed URL
+    }
+  }
+
+  return hosts;
+}
 
 export function getClientIp(request: NextRequest) {
   const forwardedFor = request.headers.get("x-forwarded-for");
@@ -21,7 +41,7 @@ export function isTrustedOrigin(request: NextRequest) {
 
   try {
     const originHost = new URL(origin).host;
-    return originHost === host || TRUSTED_HOSTS.has(originHost);
+    return originHost === host || trustedHosts().has(originHost);
   } catch {
     return false;
   }

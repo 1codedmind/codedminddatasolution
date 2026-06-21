@@ -1,62 +1,59 @@
 import Link from "next/link";
-import { ArrowRight, Mail } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 export default function CTA() {
   return (
-    <section id="cta" className="bg-white py-24">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* CTA card with deep gradient background */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-stone-950 via-emerald-950 to-stone-900 px-8 py-16 md:px-16 md:py-20 text-center">
-          {/* Decorative radial glow */}
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_0%,rgba(245,158,11,0.22),transparent)]" />
+    <section id="cta" className="bg-stone-950">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
 
-          <div className="relative">
-            {/* Eyebrow */}
-            <p className="text-xs font-semibold text-amber-300 uppercase tracking-widest mb-4">
-              Get Started
-            </p>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-end">
 
-            {/* Headline */}
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white tracking-tight mb-5">
-              Let&apos;s Build Your Data Solution
+          {/* Left */}
+          <div>
+            <h2 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-[1.07]">
+              Let&apos;s build your
+              <br />
+              data solution.
             </h2>
-
-            {/* Body text */}
-            <p className="text-stone-300 text-lg max-w-xl mx-auto mb-10 leading-relaxed">
+            <p className="mt-6 text-stone-400 text-base leading-relaxed max-w-md">
               From automated reporting to cloud data pipelines and custom
-              analytics tools, we help businesses turn data into action.
-            </p>
-
-            {/* CTA buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <a
-                href="mailto:hr@codedmind.co.in"
-                className="inline-flex items-center justify-center gap-2 px-7 py-3.5 text-sm font-semibold text-stone-900 bg-white rounded-full hover:bg-amber-50 transition-all shadow-md"
-              >
-                <Mail size={15} />
-                Email Us
-              </a>
-              <Link
-                href="/careers"
-                className="inline-flex items-center justify-center gap-2 px-7 py-3.5 text-sm font-semibold text-stone-900 bg-amber-100 rounded-full hover:bg-amber-200 transition-all shadow-md"
-              >
-                Current Openings
-              </Link>
-              <Link
-                href="/#services"
-                className="inline-flex items-center justify-center gap-2 px-7 py-3.5 text-sm font-semibold text-white border border-stone-500 rounded-full hover:border-amber-300 hover:bg-white/5 transition-all"
-              >
-                View Our Services
-                <ArrowRight size={15} />
-              </Link>
-            </div>
-
-            {/* Trust note */}
-            <p className="mt-8 text-stone-400 text-sm">
-              No commitment required &mdash; let&apos;s start with a conversation.
+              analytics tools — we help businesses turn data into action.
+              No commitment required.
             </p>
           </div>
+
+          {/* Right — actions */}
+          <div className="flex flex-col gap-3">
+            <a
+              href="mailto:hr@codedmind.co.in"
+              className="group flex items-center justify-between px-6 py-5 bg-white text-stone-900 rounded-xl hover:bg-amber-50 transition"
+            >
+              <div>
+                <p className="text-sm font-semibold">Email us directly</p>
+                <p className="text-xs text-stone-400 mt-0.5">hr@codedmind.co.in</p>
+              </div>
+              <ArrowRight size={16} className="text-stone-400 group-hover:translate-x-1 transition-transform" />
+            </a>
+
+            <Link
+              href="/careers"
+              className="group flex items-center justify-between px-6 py-5 bg-amber-600 text-white rounded-xl hover:bg-amber-700 transition"
+            >
+              <div>
+                <p className="text-sm font-semibold">View current openings</p>
+                <p className="text-xs text-amber-200 mt-0.5">Join our data engineering team</p>
+              </div>
+              <ArrowRight size={16} className="text-amber-300 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
         </div>
+
+        {/* Bottom rule */}
+        <div className="mt-16 pt-8 border-t border-stone-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-sm text-stone-600">
+          <p>Available for remote projects worldwide</p>
+          <p>Built with precision. Powered by data.</p>
+        </div>
+
       </div>
     </section>
   );

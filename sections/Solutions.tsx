@@ -1,10 +1,8 @@
-import { ArrowUpRight } from "lucide-react";
-
 const solutions = [
   {
     title: "Automated Business Reporting",
     description:
-      "Replace manual report generation with scheduled, automated pipelines that deliver accurate reports on time, every time.",
+      "Replace manual report generation with scheduled pipelines that deliver accurate reports on time, every time.",
   },
   {
     title: "Operational Dashboards",
@@ -22,62 +20,58 @@ const solutions = [
       "Automate complex financial reconciliation and compliance reporting with precision and full auditability.",
   },
   {
-    title: "AI/ML-Ready Data Pipelines",
+    title: "AI / ML-Ready Data Pipelines",
     description:
       "Prepare clean, well-documented datasets and feature stores that power your machine learning models.",
   },
   {
     title: "Internal Analytics Tools",
     description:
-      "Build lightweight internal tools and data apps that give your team self-serve access to business data.",
+      "Lightweight internal tools and data apps that give your team self-serve access to business data.",
   },
 ];
 
 export default function Solutions() {
   return (
-    <section id="solutions" className="bg-white py-24">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section header */}
-        <div className="max-w-2xl mb-14">
-          <p className="text-xs font-semibold text-emerald-700 uppercase tracking-widest mb-3">
-            Solutions
-          </p>
-          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight">
-            Problems We Solve
-          </h2>
-          <p className="mt-4 text-stone-600 text-lg leading-relaxed">
-            Practical, business-focused solutions designed to reduce friction and
-            accelerate data-driven decisions.
-          </p>
-        </div>
+    <section id="solutions" className="bg-white border-b border-stone-200">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20">
 
-        {/* Solutions grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {solutions.map(({ title, description }, i) => (
-            <div
-              key={title}
-              className="group relative flex items-start gap-5 p-6 rounded-2xl border border-stone-200/80 bg-stone-50 hover:bg-white hover:border-emerald-200 hover:shadow-md transition-all duration-200"
+          {/* Left — anchored heading */}
+          <div className="lg:col-span-4">
+            <h2 className="text-3xl md:text-4xl font-extrabold text-stone-900 tracking-tight leading-tight">
+              Problems
+              <br />
+              we solve
+            </h2>
+            <p className="mt-5 text-stone-500 text-base leading-relaxed">
+              Practical, business-focused solutions designed to reduce friction
+              and accelerate data-driven decisions.
+            </p>
+            <a
+              href="#cta"
+              className="inline-flex items-center gap-1.5 mt-8 text-sm font-semibold text-stone-900 hover:text-amber-700 transition-colors"
             >
-              {/* Number badge */}
-              <div className="shrink-0 w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center justify-center mt-0.5">
-                {String(i + 1).padStart(2, "0")}
-              </div>
+              Discuss your use case →
+            </a>
+          </div>
 
-              <div className="flex-1 min-w-0">
-                <h3 className="text-[15px] font-semibold text-slate-900 mb-1.5">
-                  {title}
-                </h3>
-                <p className="text-sm text-stone-600 leading-relaxed">
-                  {description}
-                </p>
+          {/* Right — divider list, no cards */}
+          <div className="lg:col-span-8 divide-y divide-stone-200">
+            {solutions.map(({ title, description }, i) => (
+              <div key={title} className="group flex gap-7 py-6 first:pt-0 last:pb-0">
+                <span className="shrink-0 text-xs font-bold text-stone-200 tabular-nums w-5 mt-0.5 select-none">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <div>
+                  <h3 className="text-[15px] font-semibold text-stone-900 mb-1.5 group-hover:text-amber-700 transition-colors">
+                    {title}
+                  </h3>
+                  <p className="text-sm text-stone-400 leading-relaxed">{description}</p>
+                </div>
               </div>
-
-              {/* Arrow — visible on hover */}
-              <div className="shrink-0 w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 mt-0.5">
-                <ArrowUpRight size={14} />
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </section>

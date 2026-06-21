@@ -1,89 +1,69 @@
-import {
-  Layers,
-  Target,
-  CloudCog,
-  ShieldCheck,
-  TrendingUp,
-  Wrench,
-} from "lucide-react";
-
 const reasons = [
   {
-    icon: Layers,
-    title: "Scalable Architecture Mindset",
+    number: "01",
+    title: "Scalable architecture mindset",
     description:
-      "We design systems built to grow — from thousands of records today to billions tomorrow, without rewriting from scratch.",
+      "Systems built to grow — from thousands of records today to billions tomorrow, without a rewrite.",
   },
   {
-    icon: Target,
-    title: "Business-Focused Implementation",
+    number: "02",
+    title: "Business-focused implementation",
     description:
-      "Every technical decision is tied to a business outcome. We build what creates value, not what looks impressive.",
+      "Every technical decision is tied to a business outcome. We build what creates value, not what looks good in a deck.",
   },
   {
-    icon: CloudCog,
-    title: "Cloud & Automation Expertise",
+    number: "03",
+    title: "Cloud & automation expertise",
     description:
-      "Deep hands-on experience with leading cloud platforms and automation tools to modernise your data operations.",
+      "Deep hands-on experience with leading cloud platforms and modern automation tooling.",
   },
   {
-    icon: ShieldCheck,
-    title: "Reliable & Maintainable Systems",
+    number: "04",
+    title: "Reliable, maintainable systems",
     description:
-      "Clean code, proper documentation, and tested pipelines you can hand to your team with confidence.",
+      "Clean code, proper documentation, and tested pipelines your team can own and extend with confidence.",
   },
   {
-    icon: TrendingUp,
-    title: "Performance-Driven Engineering",
+    number: "05",
+    title: "Performance-driven engineering",
     description:
-      "We benchmark, profile, and optimise — ensuring your pipelines run fast and your queries return results in seconds.",
+      "We benchmark, profile, and optimise until your pipelines run fast and queries return in seconds.",
   },
   {
-    icon: Wrench,
-    title: "Custom-Built Solutions",
+    number: "06",
+    title: "Custom-built, not off-the-shelf",
     description:
-      "No one-size-fits-all templates. Every solution is designed around your data, your stack, and your goals.",
+      "No templates. Every solution is designed around your data, your stack, and your specific goals.",
   },
 ];
 
 export default function WhyUs() {
   return (
-    /* Dark section for strong visual contrast */
-    <section id="why-us" className="bg-stone-900 py-24">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section header */}
-        <div className="text-center max-w-2xl mx-auto mb-14">
-          <p className="text-xs font-semibold text-amber-300 uppercase tracking-widest mb-3">
-            Why Choose Us
-          </p>
-          <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
-            Engineering You Can Rely On
+    <section id="why-us" className="bg-stone-900">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+
+        {/* Header row */}
+        <div className="mb-16 pb-12 border-b border-stone-700">
+          <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight leading-tight">
+            Why clients
+            <br />
+            choose us
           </h2>
-          <p className="mt-4 text-stone-300 text-lg leading-relaxed">
-            We combine technical depth with business clarity to deliver data
-            systems that work in the real world.
-          </p>
         </div>
 
-        {/* Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {reasons.map(({ icon: Icon, title, description }) => (
-            <div
-              key={title}
-              className="group bg-stone-800/60 border border-stone-700/60 rounded-2xl p-6 hover:bg-stone-800 hover:border-amber-500/40 transition-all duration-200"
-            >
-              <div className="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-stone-700 text-amber-300 mb-5 group-hover:bg-amber-600 group-hover:text-white transition-all duration-200">
-                <Icon size={20} />
-              </div>
-              <h3 className="text-[15px] font-semibold text-white mb-2">
-                {title}
-              </h3>
-              <p className="text-sm text-stone-300 leading-relaxed">
-                {description}
-              </p>
+        {/* 2-col text grid — no cards, just type */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-12">
+          {reasons.map(({ number, title, description }) => (
+            <div key={number} className="py-8 border-b border-stone-800 last:border-0">
+              <span className="block text-3xl font-black text-stone-700 tabular-nums mb-5 leading-none select-none">
+                {number}
+              </span>
+              <h3 className="text-[15px] font-semibold text-stone-100 mb-2">{title}</h3>
+              <p className="text-sm text-stone-400 leading-relaxed">{description}</p>
             </div>
           ))}
         </div>
+
       </div>
     </section>
   );
