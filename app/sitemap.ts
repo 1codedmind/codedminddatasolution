@@ -6,6 +6,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
 
   const tools = [
+    // Developer tools
     { path: "/tools/json-formatter",      priority: 0.9, changefreq: "monthly" as const },
     { path: "/tools/timezone-converter",  priority: 0.9, changefreq: "monthly" as const },
     { path: "/tools/timestamp",           priority: 0.8, changefreq: "monthly" as const },
@@ -13,6 +14,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/tools/base64",              priority: 0.8, changefreq: "monthly" as const },
     { path: "/tools/word-counter",        priority: 0.7, changefreq: "monthly" as const },
     { path: "/tools/password-generator",  priority: 0.7, changefreq: "monthly" as const },
+    // PDF tools
+    { path: "/tools/pdf",                 priority: 0.9, changefreq: "monthly" as const },
+    { path: "/tools/pdf/merge",           priority: 0.9, changefreq: "monthly" as const },
+    { path: "/tools/pdf/split",           priority: 0.9, changefreq: "monthly" as const },
+    { path: "/tools/pdf/rotate",          priority: 0.8, changefreq: "monthly" as const },
+    { path: "/tools/pdf/jpg-to-pdf",      priority: 0.8, changefreq: "monthly" as const },
   ];
 
   return [
