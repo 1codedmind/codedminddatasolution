@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 180" width="520" height="180">
+  <title>Coded Mind Data Solution</title>
+
+  <!-- Background -->
+  <rect width="520" height="180" fill="#2B2B2B" rx="10"/>
+
+  <!-- Icon dark box -->
+  <rect x="10" y="10" width="160" height="160" fill="#1A1A1A" rx="6"/>
+
+  <!-- Top diamond – salmon -->
+  <polygon points="90,8  125,43  90,78  55,43"
+           fill="#1A1A1A" stroke="#C87660" stroke-width="7" stroke-linejoin="miter"/>
+
+  <!-- Bottom diamond – salmon -->
+  <polygon points="90,102  125,137  90,172  55,137"
+           fill="#1A1A1A" stroke="#C87660" stroke-width="7" stroke-linejoin="miter"/>
+
+  <!-- Left diamond – white -->
+  <polygon points="8,90  43,55  78,90  43,125"
+           fill="#1A1A1A" stroke="#FFFFFF" stroke-width="7" stroke-linejoin="miter"/>
+
+  <!-- Right diamond – white -->
+  <polygon points="102,90  137,55  172,90  137,125"
+           fill="#1A1A1A" stroke="#FFFFFF" stroke-width="7" stroke-linejoin="miter"/>
+
+  <!-- CODED -->
+  <text x="192" y="90"
+        font-family="Arial, Helvetica, sans-serif"
+        font-size="58" font-weight="700"
+        fill="#FFFFFF" letter-spacing="1">CODED</text>
+
+  <!-- MIND -->
+  <text x="192" y="152"
+        font-family="Arial, Helvetica, sans-serif"
+        font-size="58" font-weight="700"
+        fill="#C87660" letter-spacing="1">MIND</text>
+</svg>

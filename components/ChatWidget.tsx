@@ -2,237 +2,314 @@
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { Bot, MessageCircle, Send, X } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 
-type ChatMessage = {
-  id: string;
-  role: "assistant" | "user";
-  text: string;
+type Message = { id: string; role: "assistant" | "user"; text: string };
+
+const WELCOME: Message = {
+  id: "welcome",
+  role: "assistant",
+  text: "Hi! I can help with Coded Mind's free developer tools, data services, or job openings. What can I help you with?",
 };
 
-const starterPrompts = [
-  "What services do you offer?",
-  "Tell me about the current internship opening.",
+const STARTERS = [
+  "What free tools do you offer?",
+  "Tell me about your data services",
+  "Are there any job openings?",
+  "How do I merge PDF files?",
 ];
 
-const initialMessages: ChatMessage[] = [
-  {
-    id: "welcome",
-    role: "assistant",
-    text: "Hi, I can help with Coded Mind services, job openings, and how to apply.",
-  },
-];
+function TypingDots() {
+  return (
+    <div className="flex items-center gap-1 px-4 py-3">
+      {[0, 1, 2].map((i) => (
+        <motion.span
+          key={i}
+          className="w-1.5 h-1.5 rounded-full bg-stone-400"
+          animate={{ opacity: [0.3, 1, 0.3], y: [0, -3, 0] }}
+          transition={{ duration: 1, repeat: Infinity, delay: i * 0.18, ease: "easeInOut" }}
+        />
+      ))}
+    </div>
+  );
+}
 
 export default function ChatWidget() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
+  const [isOpen,    setIsOpen]    = useState(false);
+  const [input,     setInput]     = useState("");
+  const [messages,  setMessages]  = useState<Message[]>([WELCOME]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const messagesRef = useRef<HTMLDivElement | null>(null);
+  const [error,     setError]     = useState<string | null>(null);
+  const [streaming, setStreaming] = useState(false);
 
+  const messagesRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Scroll to bottom on new messages
   useEffect(() => {
-    if (!messagesRef.current) {
-      return;
-    }
-
-    messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+    messagesRef.current?.scrollTo({ top: messagesRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, isOpen]);
+
+  // Auto-focus textarea when chat opens
+  useEffect(() => {
+    if (isOpen) setTimeout(() => textareaRef.current?.focus(), 120);
+  }, [isOpen]);
+
+  // Escape to close
+  useEffect(() => {
+    const fn = (e: KeyboardEvent) => { if (e.key === "Escape") setIsOpen(false); };
+    document.addEventListener("keydown", fn);
+    return () => document.removeEventListener("keydown", fn);
+  }, []);
 
   async function sendMessage(text: string) {
     const trimmed = text.trim();
+    if (!trimmed || isLoading) return;
 
-    if (!trimmed || isLoading) {
-      return;
-    }
-
-    const userMessage: ChatMessage = {
-      id: `user-${Date.now()}`,
-      role: "user",
-      text: trimmed,
-    };
+    const userMsg: Message = { id: `u-${Date.now()}`, role: "user", text: trimmed };
+    const assistantId = `a-${Date.now()}`;
 
     setIsOpen(true);
     setError(null);
     setInput("");
-    setMessages((current) => [...current, userMessage]);
+    setMessages((prev) => [...prev, userMsg]);
     setIsLoading(true);
 
     try {
       const history = messages
-        .filter((message) => message.id !== "welcome")
+        .filter((m) => m.id !== "welcome")
         .slice(-8)
-        .map((message) => ({
-          role: message.role,
-          text: message.text,
-        }));
+        .map((m) => ({ role: m.role, text: m.text }));
 
-      const response = await fetch("/api/chat", {
+      const res = await fetch("/api/chat", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message: trimmed,
-          history,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: trimmed, history }),
       });
 
-      const data = (await response.json()) as {
-        error?: string;
-        message?: string;
-      };
-
-      if (!response.ok || !data.message) {
-        throw new Error(
-          data.error ||
-            "The assistant is unavailable right now. Please try again shortly."
-        );
+      // Non-streaming error from our route
+      if (!res.ok) {
+        const data = (await res.json()) as { error?: string };
+        throw new Error(data.error ?? "Assistant unavailable.");
       }
 
-      const assistantMessage = data.message;
+      if (!res.body) throw new Error("No response stream received.");
 
-      setMessages((current) => [
-        ...current,
-        {
-          id: `assistant-${Date.now()}`,
-          role: "assistant",
-          text: assistantMessage,
-        },
-      ]);
-    } catch (caughtError) {
-      const message =
-        caughtError instanceof Error
-          ? caughtError.message
-          : "Something went wrong while contacting the assistant.";
+      // Add empty placeholder that we'll fill token-by-token
+      setMessages((prev) => [...prev, { id: assistantId, role: "assistant", text: "" }]);
+      setStreaming(true);
 
-      setError(message);
-      setMessages((current) => [
-        ...current,
-        {
-          id: `assistant-error-${Date.now()}`,
+      const reader  = res.body.getReader();
+      const decoder = new TextDecoder();
+      let fullText  = "";
+
+      // eslint-disable-next-line no-constant-condition
+      outer: while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        for (const line of chunk.split("\n")) {
+          if (!line.startsWith("data: ")) continue;
+          const payload = line.slice(6).trim();
+          if (payload === "[DONE]") break outer;
+
+          try {
+            const parsed = JSON.parse(payload) as { response?: string };
+            if (parsed.response) {
+              fullText += parsed.response;
+              setMessages((prev) =>
+                prev.map((m) => (m.id === assistantId ? { ...m, text: fullText } : m))
+              );
+            }
+          } catch {
+            // malformed SSE chunk — skip
+          }
+        }
+      }
+
+      if (!fullText) throw new Error("Empty response — please try again.");
+
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Something went wrong.";
+      setError(msg);
+      // Replace placeholder (if it exists) with fallback, or add new message
+      setMessages((prev) => {
+        const hasPlaceholder = prev.some((m) => m.id === assistantId);
+        const fallback: Message = {
+          id: assistantId,
           role: "assistant",
-          text: "I’m having trouble replying right now. You can also reach us at hr@codedmind.co.in.",
-        },
-      ]);
+          text: "I'm having trouble right now. Reach us directly at hr@codedmind.co.in.",
+        };
+        if (hasPlaceholder) return prev.map((m) => (m.id === assistantId ? fallback : m));
+        return [...prev, fallback];
+      });
     } finally {
       setIsLoading(false);
+      setStreaming(false);
     }
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     void sendMessage(input);
   }
 
+  const canSend = !!input.trim() && !isLoading;
+
   return (
     <div className="fixed bottom-5 right-5 z-[60] flex flex-col items-end gap-3">
-      {isOpen ? (
-        <div className="w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-3xl border border-stone-200 bg-[#fcfaf6] shadow-2xl shadow-stone-900/15">
-          <div className="flex items-center justify-between bg-stone-950 px-5 py-4 text-white">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-500/20 text-amber-300">
-                <Bot size={18} />
-              </div>
-              <div>
-                <p className="text-sm font-semibold">Coded Mind Assistant</p>
-                <p className="text-xs text-stone-300">
-                  For clients and job seekers
-                </p>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setIsOpen(false)}
-              className="rounded-full p-2 text-stone-300 transition hover:bg-white/10 hover:text-white"
-              aria-label="Close chat"
-            >
-              <X size={16} />
-            </button>
-          </div>
-
-          <div className="border-b border-stone-200 bg-white px-5 py-3">
-            <div className="flex flex-wrap gap-2">
-              {starterPrompts.map((prompt) => (
-                <button
-                  key={prompt}
-                  type="button"
-                  onClick={() => void sendMessage(prompt)}
-                  className="rounded-full border border-stone-200 bg-stone-50 px-3 py-1.5 text-xs font-medium text-stone-700 transition hover:border-amber-300 hover:bg-amber-50 hover:text-amber-900"
-                >
-                  {prompt}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div
-            ref={messagesRef}
-            className="max-h-[24rem] space-y-3 overflow-y-auto px-4 py-4"
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 12, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0,  scale: 1 }}
+            exit={{    opacity: 0, y: 12, scale: 0.96 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-stone-200 bg-[#fafaf9] shadow-2xl shadow-stone-950/20"
           >
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${
-                  message.role === "user" ? "justify-end" : "justify-start"
-                }`}
-              >
-                <div
-                  className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-                    message.role === "user"
-                      ? "bg-amber-600 text-white"
-                      : "bg-white text-stone-800 border border-stone-200"
-                  }`}
-                >
-                  {message.text}
+            {/* Header */}
+            <div className="flex items-center justify-between bg-stone-950 px-4 py-3.5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500/20">
+                  <Bot size={15} className="text-amber-300" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-white leading-none">Coded Mind Assistant</p>
+                  <p className="text-[11px] text-stone-400 mt-0.5">Tools, services & careers</p>
                 </div>
               </div>
-            ))}
-            {isLoading ? (
-              <div className="flex justify-start">
-                <div className="rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-500">
-                  Thinking...
-                </div>
-              </div>
-            ) : null}
-          </div>
-
-          <form onSubmit={handleSubmit} className="border-t border-stone-200 bg-white p-4">
-            <div className="flex items-end gap-2">
-              <textarea
-                value={input}
-                onChange={(event) => setInput(event.target.value)}
-                rows={2}
-                placeholder="Ask about services, careers, or the current opening..."
-                className="min-h-[52px] flex-1 resize-none rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-900 outline-none transition focus:border-amber-500 focus:bg-white"
-              />
               <button
-                type="submit"
-                disabled={isLoading || !input.trim()}
-                className="inline-flex h-[52px] w-[52px] items-center justify-center rounded-2xl bg-amber-600 text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:bg-stone-300"
-                aria-label="Send message"
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="rounded-full p-1.5 text-stone-400 hover:bg-white/10 hover:text-white transition-colors"
+                aria-label="Close chat"
               >
-                <Send size={16} />
+                <X size={15} />
               </button>
             </div>
-            {error ? (
-              <p className="mt-2 text-xs text-rose-600">{error}</p>
-            ) : (
-              <p className="mt-2 text-xs text-stone-500">
-                Powered by AI. For formal applications, use the careers form.
-              </p>
-            )}
-          </form>
-        </div>
-      ) : null}
 
-      <button
+            {/* Starters */}
+            <div className="border-b border-stone-200 bg-white px-4 py-3">
+              <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-2">Quick questions</p>
+              <div className="flex flex-wrap gap-1.5">
+                {STARTERS.map((prompt) => (
+                  <button
+                    key={prompt}
+                    type="button"
+                    onClick={() => void sendMessage(prompt)}
+                    disabled={isLoading}
+                    className="rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1 text-[11px] font-medium text-stone-600 hover:border-amber-300 hover:bg-amber-50 hover:text-amber-800 transition-colors disabled:opacity-40"
+                  >
+                    {prompt}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Messages */}
+            <div
+              ref={messagesRef}
+              className="max-h-80 space-y-2.5 overflow-y-auto px-4 py-4 scroll-smooth"
+            >
+              {messages.map((msg) => (
+                <motion.div
+                  key={msg.id}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                >
+                  <div
+                    className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
+                      msg.role === "user"
+                        ? "bg-stone-950 text-white"
+                        : "bg-white text-stone-800 border border-stone-200"
+                    }`}
+                  >
+                    {msg.text}
+                    {streaming && msg.id.startsWith("a-") && msg.text && (
+                      <span className="inline-block w-0.5 h-3.5 bg-stone-400 ml-0.5 animate-pulse align-middle" />
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+
+              {/* Typing indicator — shown while waiting for first token */}
+              {isLoading && !streaming && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex justify-start"
+                >
+                  <div className="rounded-2xl border border-stone-200 bg-white">
+                    <TypingDots />
+                  </div>
+                </motion.div>
+              )}
+            </div>
+
+            {/* Input */}
+            <form onSubmit={handleSubmit} className="border-t border-stone-200 bg-white p-3.5">
+              <div className="flex items-end gap-2">
+                <textarea
+                  ref={textareaRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      void sendMessage(input);
+                    }
+                  }}
+                  rows={2}
+                  placeholder="Ask anything… ↵ to send"
+                  className="min-h-[48px] flex-1 resize-none rounded-xl border border-stone-200 bg-stone-50 px-3.5 py-2.5 text-sm text-stone-900 outline-none transition-colors placeholder:text-stone-400 focus:border-amber-400 focus:bg-white"
+                />
+                <motion.button
+                  type="submit"
+                  disabled={!canSend}
+                  whileHover={canSend ? { scale: 1.05 } : undefined}
+                  whileTap={canSend  ? { scale: 0.95 } : undefined}
+                  className="flex h-[48px] w-[48px] shrink-0 items-center justify-center rounded-xl bg-stone-950 text-white transition-colors hover:bg-amber-600 disabled:cursor-not-allowed disabled:bg-stone-200 disabled:text-stone-400"
+                  aria-label="Send message"
+                >
+                  <Send size={15} />
+                </motion.button>
+              </div>
+              {error ? (
+                <p className="mt-2 text-[11px] text-rose-500">{error}</p>
+              ) : (
+                <p className="mt-2 text-[11px] text-stone-400">
+                  Shift+Enter for new line · Powered by AI
+                </p>
+              )}
+            </form>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Toggle button */}
+      <motion.button
         type="button"
-        onClick={() => setIsOpen((current) => !current)}
-        className="inline-flex items-center gap-3 rounded-full bg-stone-950 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-stone-900/20 transition hover:bg-stone-800"
+        onClick={() => setIsOpen((v) => !v)}
+        whileHover={{ scale: 1.03 }}
+        whileTap={{ scale: 0.96 }}
+        className="inline-flex items-center gap-2.5 rounded-full bg-stone-950 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-stone-950/20 hover:bg-stone-800 transition-colors"
       >
-        {isOpen ? <X size={18} /> : <MessageCircle size={18} />}
-        Chat With Us
-      </button>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.span
+            key={isOpen ? "x" : "chat"}
+            initial={{ rotate: -90, opacity: 0, scale: 0.8 }}
+            animate={{ rotate: 0,   opacity: 1, scale: 1   }}
+            exit={{    rotate:  90,  opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.15 }}
+          >
+            {isOpen ? <X size={16} /> : <MessageCircle size={16} />}
+          </motion.span>
+        </AnimatePresence>
+        {isOpen ? "Close" : "Chat With Us"}
+      </motion.button>
     </div>
   );
 }

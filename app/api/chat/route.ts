@@ -11,46 +11,34 @@ type ChatRequestBody = {
   history?: ChatHistoryItem[];
 };
 
-type CloudflareResponseBody = {
-  result?: {
-    response?: string;
-  };
-  success?: boolean;
-  errors?: Array<{
-    message?: string;
-  }>;
-};
+const systemPrompt = `You are the website assistant for Coded Mind (codedmind.co.in).
 
-const systemPrompt = `
-You are the website assistant for Coded Mind Data Solution.
+You help two types of visitors:
+1. Developers and teams looking for free browser-based tools (JSON formatter, Base64, UUID, timezone converter, PDF tools, and more).
+2. Businesses and teams looking for data engineering, automation, and analytics services.
+3. Job seekers exploring current openings and how to apply.
 
-Your audience includes:
-1. Prospective clients looking for data engineering and analytics services.
-2. Job seekers looking for current openings and application guidance.
+Tone: concise, warm, and practical. Never pushy.
+Response length: 2–4 short sentences unless the user asks for more detail.
+Formatting: use plain text. Avoid markdown bullet points unless listing 3+ items.
 
 Rules:
-- Be concise, warm, and practical.
-- Stay grounded in the website context provided below.
-- If a visitor asks about services, explain relevant offerings and invite them to contact hr@codedmind.co.in for next steps.
-- If a visitor asks about jobs, summarize the current role, eligibility, skills, and direct them to the careers page application form.
-- Do not claim services, pricing, office locations, or job openings that are not in the site context.
-- If the answer is not available from the site context, say that clearly and suggest emailing hr@codedmind.co.in.
+- For tool questions: confirm the tool is free, runs in the browser, no login needed. Give the URL.
+- For service questions: briefly describe the relevant service and invite them to email hr@codedmind.co.in.
+- For job questions: describe the role, key skills, and direct them to /careers or hr@codedmind.co.in.
+- Never invent pricing, SLAs, team size, or office locations — they aren't in the site context.
+- If you don't know: say so honestly, then suggest hr@codedmind.co.in.
 
 Site context:
-${buildSiteChatContext()}
-`.trim();
+${buildSiteChatContext()}`.trim();
 
-function buildConversationPrompt(
-  history: ChatHistoryItem[],
-  message: string
-) {
-  const recentHistory = history.slice(-8);
-
-  const historyText = recentHistory
-    .map((item) => `${item.role === "user" ? "User" : "Assistant"}: ${item.text}`)
+function buildPrompt(history: ChatHistoryItem[], message: string): string {
+  const turns = history
+    .slice(-8)
+    .map((h) => `${h.role === "user" ? "User" : "Assistant"}: ${h.text}`)
     .join("\n");
 
-  return [systemPrompt, historyText, `User: ${message.trim()}`, "Assistant:"]
+  return [systemPrompt, turns, `User: ${message.trim()}`, "Assistant:"]
     .filter(Boolean)
     .join("\n\n");
 }
@@ -59,59 +47,51 @@ export async function POST(request: Request) {
   const { message, history = [] } = (await request.json()) as ChatRequestBody;
 
   if (!message?.trim()) {
-    return NextResponse.json(
-      { error: "A message is required." },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Message is required." }, { status: 400 });
   }
 
-  if (!process.env.CLOUDFLARE_ACCOUNT_ID || !process.env.CLOUDFLARE_API_TOKEN) {
+  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+  const apiToken  = process.env.CLOUDFLARE_API_TOKEN;
+
+  if (!accountId || !apiToken) {
     return NextResponse.json(
-      {
-        error:
-          "Chat is not configured yet. Add CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN to enable the assistant.",
-      },
+      { error: "Chat is not configured. Contact hr@codedmind.co.in directly." },
       { status: 500 }
     );
   }
 
   const model =
-    process.env.CLOUDFLARE_AI_MODEL ||
-    "@cf/meta/llama-3.1-8b-instruct-fast";
+    process.env.CLOUDFLARE_AI_MODEL ?? "@cf/meta/llama-3.1-8b-instruct-fast";
 
-  const response = await fetch(
-    `https://api.cloudflare.com/client/v4/accounts/${process.env.CLOUDFLARE_ACCOUNT_ID}/ai/run/${model}`,
+  const cfResponse = await fetch(
+    `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${model}`,
     {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.CLOUDFLARE_API_TOKEN}`,
+        Authorization: `Bearer ${apiToken}`,
       },
       body: JSON.stringify({
-        prompt: buildConversationPrompt(history, message),
-        max_tokens: 500,
+        prompt: buildPrompt(history, message),
+        max_tokens: 600,
+        stream: true,
       }),
     }
   );
 
-  const responseBody = (await response.json()) as CloudflareResponseBody;
-
-  if (!response.ok || !responseBody.success) {
-    const errorMessage =
-      responseBody.errors?.map((error) => error.message).filter(Boolean).join("; ") ||
-      "The assistant could not respond right now.";
-
+  if (!cfResponse.ok || !cfResponse.body) {
     return NextResponse.json(
-      {
-        error: errorMessage,
-      },
-      { status: 500 }
+      { error: "The assistant is unavailable right now. Try again shortly." },
+      { status: 502 }
     );
   }
 
-  return NextResponse.json({
-    message:
-      responseBody.result?.response?.trim() ||
-      "I’m here to help with services, job openings, and application guidance.",
+  // Forward the Cloudflare SSE stream directly to the client.
+  return new Response(cfResponse.body, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      "X-Accel-Buffering": "no",
+    },
   });
 }

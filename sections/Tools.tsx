@@ -1,37 +1,46 @@
+"use client";
+
 import Link from "next/link";
 import { Braces, Lock, Hash, AlignLeft, Clock, KeyRound, Globe, ArrowRight, Files, Scissors, RotateCcw, FileImage } from "lucide-react";
+import { motion } from "framer-motion";
+import { fadeUp, container } from "@/lib/motion";
 
 const devTools = [
-  { href: "/tools/json-formatter", icon: Braces, label: "JSON Formatter", description: "Format & validate JSON instantly." },
-  { href: "/tools/base64", icon: Lock, label: "Base64 Encoder", description: "Encode or decode Base64 strings." },
-  { href: "/tools/uuid-generator", icon: Hash, label: "UUID Generator", description: "Generate secure v4 UUIDs in bulk." },
-  { href: "/tools/word-counter", icon: AlignLeft, label: "Word Counter", description: "Words, chars, reading time — live." },
-  { href: "/tools/timestamp", icon: Clock, label: "Timestamp Converter", description: "Unix timestamps ↔ readable dates." },
-  { href: "/tools/timezone-converter", icon: Globe, label: "Timezone Converter", description: "All 500+ IANA timezones, DST-aware." },
-  { href: "/tools/password-generator", icon: KeyRound, label: "Password Generator", description: "Strong random passwords, locally." },
+  { href: "/tools/json-formatter",      icon: Braces,    label: "JSON Formatter",      description: "Format, validate & minify JSON instantly." },
+  { href: "/tools/timezone-converter",  icon: Globe,     label: "Timezone Converter",  description: "500+ IANA timezones, DST-aware timeline." },
+  { href: "/tools/timestamp",           icon: Clock,     label: "Timestamp Converter", description: "Unix timestamps ↔ human-readable dates." },
+  { href: "/tools/base64",              icon: Lock,      label: "Base64 Encoder",      description: "Encode or decode Base64 strings." },
+  { href: "/tools/uuid-generator",      icon: Hash,      label: "UUID Generator",      description: "Cryptographically secure v4 UUIDs in bulk." },
+  { href: "/tools/word-counter",        icon: AlignLeft, label: "Word Counter",        description: "Words, characters, reading time — live." },
+  { href: "/tools/password-generator",  icon: KeyRound,  label: "Password Generator",  description: "Strong random passwords, generated locally." },
 ];
 
 const pdfTools = [
-  { href: "/tools/pdf/merge",      icon: Files,      label: "Merge PDF",    description: "Combine multiple PDFs into one." },
-  { href: "/tools/pdf/split",      icon: Scissors,   label: "Split PDF",    description: "Extract pages or custom ranges." },
-  { href: "/tools/pdf/rotate",     icon: RotateCcw,  label: "Rotate PDF",   description: "Rotate pages by 90°, 180°, 270°." },
-  { href: "/tools/pdf/jpg-to-pdf", icon: FileImage,  label: "JPG to PDF",   description: "Convert images to a PDF document." },
+  { href: "/tools/pdf/merge",      icon: Files,     label: "Merge PDF",  description: "Combine multiple PDFs. Reorder pages before merging." },
+  { href: "/tools/pdf/split",      icon: Scissors,  label: "Split PDF",  description: "Extract pages or custom ranges from any PDF." },
+  { href: "/tools/pdf/rotate",     icon: RotateCcw, label: "Rotate PDF", description: "Rotate all pages 90°, 180°, or 270°." },
+  { href: "/tools/pdf/jpg-to-pdf", icon: FileImage, label: "JPG to PDF", description: "Convert JPG, PNG, or WebP images to a PDF." },
 ];
 
-function ToolCard({ href, icon: Icon, label, description, accent }: { href: string; icon: React.ElementType; label: string; description: string; accent: string }) {
+function ToolCard({ href, icon: Icon, label, description }: { href: string; icon: React.ElementType; label: string; description: string }) {
   return (
-    <Link
-      href={href}
-      className={`group flex items-start gap-4 p-5 bg-[#fcfaf6] rounded-xl border border-stone-200 hover:bg-white hover:shadow-sm transition-all duration-150 ${accent}`}
+    <motion.div
+      variants={fadeUp}
+      whileHover={{ y: -2, transition: { duration: 0.15 } }}
     >
-      <div className="shrink-0 flex items-center justify-center w-9 h-9 rounded-lg bg-stone-100 text-stone-500 group-hover:text-white transition-all duration-150 group-hover:bg-current">
-        <Icon size={17} />
-      </div>
-      <div>
-        <p className="text-sm font-semibold text-stone-900">{label}</p>
-        <p className="text-xs text-stone-400 mt-0.5 leading-relaxed">{description}</p>
-      </div>
-    </Link>
+      <Link
+        href={href}
+        className="group flex items-start gap-3.5 p-4 bg-white border border-stone-200 rounded-xl hover:border-stone-300 hover:shadow-sm transition-all duration-150 h-full"
+      >
+        <div className="shrink-0 w-8 h-8 rounded-lg bg-stone-950 flex items-center justify-center text-white group-hover:bg-amber-600 transition-colors duration-200">
+          <Icon size={14} />
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-stone-900 leading-tight">{label}</p>
+          <p className="text-xs text-stone-400 mt-0.5 leading-relaxed">{description}</p>
+        </div>
+      </Link>
+    </motion.div>
   );
 }
 
@@ -42,34 +51,58 @@ export default function ToolsSection() {
 
         {/* Developer tools */}
         <div>
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-8">
+          <motion.div
+            className="flex items-end justify-between mb-6"
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-60px" }}
+          >
             <div>
-              <h2 className="text-3xl md:text-4xl font-extrabold text-stone-900 tracking-tight">Developer tools</h2>
-              <p className="mt-2 text-stone-500 text-base max-w-md">Everything runs in your browser. No account, no data sent.</p>
+              <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-2">Developer tools</p>
+              <h2 className="text-2xl font-bold text-stone-950 tracking-tight">Run in your browser. No login.</h2>
             </div>
-            <Link href="/tools" className="inline-flex items-center gap-1.5 text-sm font-semibold text-stone-900 hover:text-amber-700 transition-colors shrink-0">
-              View all <ArrowRight size={14} />
+            <Link href="/tools" className="hidden sm:flex items-center gap-1 text-sm font-medium text-stone-500 hover:text-stone-950 transition-colors">
+              All tools <ArrowRight size={13} />
             </Link>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {devTools.map((t) => <ToolCard key={t.href} {...t} accent="hover:border-amber-400 [&_.group-hover\\:bg-current]:group-hover:bg-amber-600" />)}
-          </div>
+          </motion.div>
+          <motion.div
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"
+            variants={container}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-60px" }}
+          >
+            {devTools.map((t) => <ToolCard key={t.href} {...t} />)}
+          </motion.div>
         </div>
 
         {/* PDF tools */}
         <div>
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-8">
+          <motion.div
+            className="flex items-end justify-between mb-6"
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-60px" }}
+          >
             <div>
-              <h2 className="text-3xl md:text-4xl font-extrabold text-stone-900 tracking-tight">PDF tools</h2>
-              <p className="mt-2 text-stone-500 text-base max-w-md">Process PDFs locally in your browser. Files never leave your device.</p>
+              <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-2">PDF tools</p>
+              <h2 className="text-2xl font-bold text-stone-950 tracking-tight">Process PDFs locally. Files never leave your device.</h2>
             </div>
-            <Link href="/tools/pdf" className="inline-flex items-center gap-1.5 text-sm font-semibold text-stone-900 hover:text-rose-600 transition-colors shrink-0">
-              All PDF tools <ArrowRight size={14} />
+            <Link href="/tools/pdf" className="hidden sm:flex items-center gap-1 text-sm font-medium text-stone-500 hover:text-stone-950 transition-colors">
+              All PDF tools <ArrowRight size={13} />
             </Link>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {pdfTools.map((t) => <ToolCard key={t.href} {...t} accent="hover:border-rose-300 [&_.group-hover\\:bg-current]:group-hover:bg-rose-500" />)}
-          </div>
+          </motion.div>
+          <motion.div
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"
+            variants={container}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-60px" }}
+          >
+            {pdfTools.map((t) => <ToolCard key={t.href} {...t} />)}
+          </motion.div>
         </div>
 
       </div>
