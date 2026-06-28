@@ -7,7 +7,7 @@ export default async function SignupPage() {
   const session = await getCurrentSession();
 
   if (session) {
-    redirect("/candidate");
+    redirect(session.role === "candidate" ? "/candidate" : "/admin");
   }
 
   return <AuthForm mode="signup" />;

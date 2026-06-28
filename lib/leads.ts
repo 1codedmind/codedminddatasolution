@@ -13,6 +13,8 @@ async function ensureTable() {
       company     TEXT,
       message     TEXT,
       source      TEXT,
+      status      TEXT NOT NULL DEFAULT 'new',
+      assigned_to TEXT,
       created_at  TEXT NOT NULL
     )
   `;
@@ -22,7 +24,7 @@ export async function getLeads(limit = 500): Promise<Lead[]> {
   await ensureTable();
   const sql = getSql();
   return sql<Lead[]>`
-    SELECT id, name, email, company, message, source, created_at AS "createdAt"
+    SELECT id, name, email, company, message, source, status, assigned_to AS "assignedTo", created_at AS "createdAt"
     FROM leads
     ORDER BY created_at DESC
     LIMIT ${limit}

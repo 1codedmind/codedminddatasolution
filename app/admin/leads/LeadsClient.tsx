@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import type { Lead } from "@/lib/leads";
 import { Download, Search, Users, Calendar, TrendingUp } from "lucide-react";
 
@@ -125,9 +125,8 @@ export default function LeadsClient({
                   </tr>
                 )}
                 {filtered.map((lead) => (
-                  <>
+                  <React.Fragment key={lead.id}>
                     <tr
-                      key={lead.id}
                       onClick={() => setExpanded(expanded === lead.id ? null : lead.id)}
                       className="border-b border-stone-800/60 hover:bg-stone-800/40 cursor-pointer transition-colors"
                     >
@@ -157,14 +156,14 @@ export default function LeadsClient({
                       </td>
                     </tr>
                     {expanded === lead.id && lead.message && (
-                      <tr key={`${lead.id}-exp`} className="border-b border-stone-800/60 bg-stone-800/20">
+                      <tr className="border-b border-stone-800/60 bg-stone-800/20">
                         <td colSpan={6} className="px-5 py-4">
                           <p className="text-xs font-semibold text-stone-500 uppercase tracking-widest mb-2">Full message</p>
                           <p className="text-stone-300 text-sm leading-relaxed whitespace-pre-wrap">{lead.message}</p>
                         </td>
                       </tr>
                     )}
-                  </>
+                  </React.Fragment>
                 ))}
               </tbody>
             </table>

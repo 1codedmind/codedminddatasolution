@@ -1,25 +1,17 @@
 import { NextResponse } from "next/server";
 import { getSql, hasDatabaseUrl } from "@/lib/db";
+import { enforceRateLimit } from "@/lib/auth/rate-limit";
+import { getClientIp } from "@/lib/auth/security";
 import { randomUUID } from "crypto";
-
-async function ensureTable() {
-  const sql = getSql();
-  await sql`
-    CREATE TABLE IF NOT EXISTS leads (
-      id          TEXT PRIMARY KEY,
-      name        TEXT NOT NULL,
-      email       TEXT NOT NULL,
-      company     TEXT,
-      message     TEXT,
-      source      TEXT,
-      created_at  TEXT NOT NULL
-    )
-  `;
-}
 
 export async function POST(req: Request) {
   if (!hasDatabaseUrl()) {
     return NextResponse.json({ error: "Database not configured" }, { status: 503 });
+  }
+
+  const ip = getClientIp(req as Parameters<typeof getClientIp>[0]);
+  if (!enforceRateLimit(`lead:${ip}`, 5, 60_000)) {
+    return NextResponse.json({ error: "Too many submissions. Please try again later." }, { status: 429 });
   }
 
   let body: unknown;
@@ -32,19 +24,22 @@ export async function POST(req: Request) {
   const { name, email, company, message, source } = body as Record<string, string>;
 
   if (!name?.trim() || !email?.trim()) {
-    return NextResponse.json({ error: "name and email are required" }, { status: 400 });
+    return NextResponse.json({ error: "Name and email are required" }, { status: 400 });
   }
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (name.trim().length > 100 || email.trim().length > 254 || (message ?? "").length > 5000) {
+    return NextResponse.json({ error: "Input too long" }, { status: 400 });
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
   if (!emailRegex.test(email.trim())) {
     return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
   }
 
   try {
-    await ensureTable();
     const sql = getSql();
     await sql`
-      INSERT INTO leads (id, name, email, company, message, source, created_at)
+      INSERT INTO leads (id, name, email, company, message, source, status, created_at)
       VALUES (
         ${randomUUID()},
         ${name.trim()},
@@ -52,6 +47,7 @@ export async function POST(req: Request) {
         ${company?.trim() ?? null},
         ${message?.trim() ?? null},
         ${source ?? "website"},
+        ${"new"},
         ${new Date().toISOString()}
       )
     `;

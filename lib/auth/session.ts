@@ -3,10 +3,12 @@ import { cookies } from "next/headers";
 import { AUTH_COOKIE_NAME, SESSION_TTL_SECONDS } from "@/lib/auth/config";
 import { safeEqualString, signValue } from "@/lib/auth/crypto";
 
+export type UserRole = "candidate" | "superadmin" | "admin" | "employee";
+
 export type SessionPayload = {
   sub: string;
   email: string;
-  role: "candidate";
+  role: UserRole;
   exp: number;
 };
 
@@ -52,7 +54,8 @@ export function verifySessionToken(token?: string | null) {
       return null;
     }
 
-    if (payload.role !== "candidate") {
+    const validRoles: UserRole[] = ["candidate", "superadmin", "admin", "employee"];
+    if (!validRoles.includes(payload.role)) {
       return null;
     }
 

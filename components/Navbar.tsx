@@ -19,7 +19,7 @@ const navLinks = [
 ];
 
 
-export default function Navbar({ sessionEmail }: { sessionEmail?: string }) {
+export default function Navbar({ sessionEmail, sessionRole }: { sessionEmail?: string; sessionRole?: string }) {
   const [mobileOpen,  setMobileOpen]  = useState(false);
   const [toolsOpen,   setToolsOpen]   = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -140,11 +140,14 @@ export default function Navbar({ sessionEmail }: { sessionEmail?: string }) {
                         <p className="text-sm font-medium text-stone-800 truncate mt-0.5">{sessionEmail}</p>
                       </div>
                       <div className="space-y-0.5">
-                        {[
+                        {(sessionRole && sessionRole !== "candidate" ? [
+                          { href: "/admin",       icon: LayoutDashboard, label: "Admin Dashboard" },
+                          { href: "/admin/leads", icon: FileUser,        label: "Leads"           },
+                        ] : [
                           { href: "/candidate",         icon: LayoutDashboard, label: "Dashboard"   },
                           { href: "/candidate/profile", icon: FileUser,        label: "Profile"     },
                           { href: "/assessments",       icon: ClipboardList,   label: "Assessments" },
-                        ].map(({ href, icon: Icon, label }) => (
+                        ]).map(({ href, icon: Icon, label }) => (
                           <Link key={href} href={href} onClick={() => setProfileOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-sm text-stone-700 hover:bg-stone-50 rounded-lg transition-colors">
                             <Icon size={14} className="text-stone-400" /> {label}
                           </Link>
@@ -218,8 +221,8 @@ export default function Navbar({ sessionEmail }: { sessionEmail?: string }) {
               </div>
               {sessionEmail ? (
                 <div className="space-y-2">
-                  <Link href="/candidate" onClick={() => setMobileOpen(false)} className="flex items-center justify-center gap-2 w-full py-2.5 text-sm font-semibold text-white bg-amber-600 rounded-xl hover:bg-amber-700 transition-colors">
-                    <CircleUserRound size={14} /> Dashboard
+                  <Link href={sessionRole && sessionRole !== "candidate" ? "/admin" : "/candidate"} onClick={() => setMobileOpen(false)} className="flex items-center justify-center gap-2 w-full py-2.5 text-sm font-semibold text-white bg-amber-600 rounded-xl hover:bg-amber-700 transition-colors">
+                    <CircleUserRound size={14} /> {sessionRole && sessionRole !== "candidate" ? "Admin" : "Dashboard"}
                   </Link>
                   <LogoutButton className="w-full py-2.5 text-sm font-medium text-stone-600 border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors" />
                 </div>

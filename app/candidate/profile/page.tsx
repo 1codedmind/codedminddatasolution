@@ -20,6 +20,10 @@ export default async function CandidateProfilePage() {
     redirect("/login");
   }
 
+  if (session.role !== "candidate") {
+    redirect("/admin");
+  }
+
   const candidate = await findCandidateById(session.sub);
 
   if (!candidate) {

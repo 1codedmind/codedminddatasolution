@@ -59,7 +59,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
       body: JSON.stringify(payload),
     });
 
-    const data = (await response.json().catch(() => null)) as { error?: string } | null;
+    const data = (await response.json().catch(() => null)) as { error?: string; redirectTo?: string } | null;
 
     if (!response.ok) {
       setError(data?.error ?? "Something went wrong. Please try again.");
@@ -67,7 +67,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
     }
 
     startTransition(() => {
-      router.push("/candidate");
+      router.push(data?.redirectTo ?? "/candidate");
       router.refresh();
     });
   }

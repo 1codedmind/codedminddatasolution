@@ -78,7 +78,7 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <ConsentProvider>
-          <Navbar sessionEmail={session?.email} />
+          <Navbar sessionEmail={session?.email} sessionRole={session?.role} />
           {children}
           <Footer />
           <ChatWidget />
