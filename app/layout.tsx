@@ -4,6 +4,8 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ChatWidget from "@/components/ChatWidget";
+import { ConsentProvider } from "@/components/CookieConsent";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 import { getCurrentSession } from "@/lib/auth/session";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -75,12 +77,15 @@ export default async function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <Navbar sessionEmail={session?.email} />
-        {children}
-        <Footer />
-        <ChatWidget />
-        <Analytics />
-        <SpeedInsights />
+        <ConsentProvider>
+          <Navbar sessionEmail={session?.email} />
+          {children}
+          <Footer />
+          <ChatWidget />
+          <GoogleAnalytics />
+          <Analytics />
+          <SpeedInsights />
+        </ConsentProvider>
       </body>
     </html>
   );
