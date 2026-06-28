@@ -1,5 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { buildSiteChatContext } from "@/data/siteChatContext";
+import { enforceRateLimit } from "@/lib/auth/rate-limit";
+import { getClientIp } from "@/lib/auth/security";
+
+const MAX_MESSAGE_LENGTH = 1000;
+const MAX_HISTORY_ITEMS  = 8;
 
 type ChatHistoryItem = {
   role: "assistant" | "user";
@@ -34,8 +39,9 @@ ${buildSiteChatContext()}`.trim();
 
 function buildPrompt(history: ChatHistoryItem[], message: string): string {
   const turns = history
-    .slice(-8)
-    .map((h) => `${h.role === "user" ? "User" : "Assistant"}: ${h.text}`)
+    .filter((h) => (h.role === "user" || h.role === "assistant") && typeof h.text === "string")
+    .slice(-MAX_HISTORY_ITEMS)
+    .map((h) => `${h.role === "user" ? "User" : "Assistant"}: ${h.text.slice(0, 500)}`)
     .join("\n");
 
   return [systemPrompt, turns, `User: ${message.trim()}`, "Assistant:"]
@@ -43,11 +49,27 @@ function buildPrompt(history: ChatHistoryItem[], message: string): string {
     .join("\n\n");
 }
 
-export async function POST(request: Request) {
-  const { message, history = [] } = (await request.json()) as ChatRequestBody;
+export async function POST(request: NextRequest) {
+  const ip = getClientIp(request);
+  if (!enforceRateLimit(`chat:${ip}`, 20, 60_000)) {
+    return NextResponse.json({ error: "Too many messages. Slow down." }, { status: 429 });
+  }
+
+  let body: ChatRequestBody;
+  try {
+    body = (await request.json()) as ChatRequestBody;
+  } catch {
+    return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+  }
+
+  const { message, history = [] } = body;
 
   if (!message?.trim()) {
     return NextResponse.json({ error: "Message is required." }, { status: 400 });
+  }
+
+  if (message.trim().length > MAX_MESSAGE_LENGTH) {
+    return NextResponse.json({ error: "Message too long." }, { status: 400 });
   }
 
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
