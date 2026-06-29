@@ -62,8 +62,7 @@ export async function listAssets(opts: {
     LEFT JOIN asset_categories ac ON ac.id = a.category_id
     LEFT JOIN team_members tm ON tm.id = a.assigned_to
     WHERE
-      (${status ?? null} IS NULL OR a.status = ${status ?? null})
-      AND (${assignedTo ?? null} IS NULL OR a.assigned_to = ${assignedTo ?? null})
+      a.status = COALESCE(${status ?? null}, a.status)
     ORDER BY a.created_at DESC
   `;
 }

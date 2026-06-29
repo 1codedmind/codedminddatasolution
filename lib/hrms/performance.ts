@@ -48,8 +48,8 @@ export async function listPerformanceReviews(opts: {
     JOIN team_members tm ON tm.id = pr.member_id
     LEFT JOIN team_members rv ON rv.id = pr.reviewer_id
     WHERE
-      (${memberId ?? null} IS NULL OR pr.member_id = ${memberId ?? null})
-      AND (${status ?? null} IS NULL OR pr.status = ${status ?? null})
+      pr.member_id = COALESCE(${memberId ?? null}, pr.member_id)
+      AND pr.status = COALESCE(${status ?? null}, pr.status)
     ORDER BY pr.created_at DESC
   `;
 }

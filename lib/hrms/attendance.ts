@@ -41,11 +41,9 @@ export async function listAttendance(opts: {
     FROM attendance_logs al
     JOIN team_members tm ON tm.id = al.member_id
     WHERE
-      (${memberId ?? null} IS NULL OR al.member_id = ${memberId ?? null})
-      AND (${month ?? null} IS NULL
-           OR CAST(SUBSTRING(al.date, 6, 2) AS INTEGER) = ${month ?? null})
-      AND (${year ?? null} IS NULL
-           OR CAST(SUBSTRING(al.date, 1, 4) AS INTEGER) = ${year ?? null})
+      al.member_id = COALESCE(${memberId ?? null}, al.member_id)
+      AND CAST(SUBSTRING(al.date, 6, 2) AS INTEGER) = COALESCE(${month ?? null}, CAST(SUBSTRING(al.date, 6, 2) AS INTEGER))
+      AND CAST(SUBSTRING(al.date, 1, 4) AS INTEGER) = COALESCE(${year ?? null}, CAST(SUBSTRING(al.date, 1, 4) AS INTEGER))
     ORDER BY al.date DESC, al.check_in_at DESC
     LIMIT ${limit}
   `;
