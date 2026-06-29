@@ -33,6 +33,7 @@ function buildContentSecurityPolicy() {
 }
 
 const nextConfig: NextConfig = {
+  cacheComponents: true,
   async headers() {
     return [
       {

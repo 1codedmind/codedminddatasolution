@@ -2,13 +2,14 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+import NavbarSession from "@/components/NavbarSession";
 import Footer from "@/components/Footer";
 import ChatWidget from "@/components/ChatWidget";
 import { ConsentProvider } from "@/components/CookieConsent";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
-import { getCurrentSession } from "@/lib/auth/session";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Suspense } from "react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -64,13 +65,11 @@ export const metadata: Metadata = {
   verification: { google: "84qSQOAP2QMH4TuIWXY0hwgvKUq3CfYwRzewks_hzRo" },
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await getCurrentSession();
-
   return (
     <html
       lang="en"
@@ -78,7 +77,9 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <ConsentProvider>
-          <Navbar sessionEmail={session?.email} sessionRole={session?.role} />
+          <Suspense fallback={<Navbar />}>
+            <NavbarSession />
+          </Suspense>
           {children}
           <Footer />
           <ChatWidget />

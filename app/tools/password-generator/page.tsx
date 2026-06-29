@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import PasswordGeneratorTool from "./PasswordGeneratorTool";
 
 export const metadata: Metadata = {
@@ -68,7 +69,7 @@ export default function PasswordGeneratorPage() {
         </p>
       </div>
 
-      <PasswordGeneratorTool />
+      <Suspense><PasswordGeneratorTool /></Suspense>
 
       <section className="mt-12 space-y-4 border-t border-stone-100 pt-10">
         <h2 className="text-lg font-bold text-stone-800">Frequently asked questions</h2>

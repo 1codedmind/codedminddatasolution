@@ -141,6 +141,7 @@ export default function Navbar({ sessionEmail, sessionRole }: { sessionEmail?: s
                       </div>
                       <div className="space-y-0.5">
                         {(sessionRole && sessionRole !== "candidate" ? [
+                          { href: "/hrms",        icon: LayoutDashboard, label: "HRMS Portal"     },
                           { href: "/admin",       icon: LayoutDashboard, label: "Admin Dashboard" },
                           { href: "/admin/leads", icon: FileUser,        label: "Leads"           },
                         ] : [
@@ -221,8 +222,8 @@ export default function Navbar({ sessionEmail, sessionRole }: { sessionEmail?: s
               </div>
               {sessionEmail ? (
                 <div className="space-y-2">
-                  <Link href={sessionRole && sessionRole !== "candidate" ? "/admin" : "/candidate"} onClick={() => setMobileOpen(false)} className="flex items-center justify-center gap-2 w-full py-2.5 text-sm font-semibold text-white bg-amber-600 rounded-xl hover:bg-amber-700 transition-colors">
-                    <CircleUserRound size={14} /> {sessionRole && sessionRole !== "candidate" ? "Admin" : "Dashboard"}
+                  <Link href={sessionRole && sessionRole !== "candidate" ? "/hrms" : "/candidate"} onClick={() => setMobileOpen(false)} className="flex items-center justify-center gap-2 w-full py-2.5 text-sm font-semibold text-white bg-amber-600 rounded-xl hover:bg-amber-700 transition-colors">
+                    <CircleUserRound size={14} /> {sessionRole && sessionRole !== "candidate" ? "HRMS" : "Dashboard"}
                   </Link>
                   <LogoutButton className="w-full py-2.5 text-sm font-medium text-stone-600 border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors" />
                 </div>

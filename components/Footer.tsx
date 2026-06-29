@@ -90,7 +90,7 @@ export default function Footer() {
 
         {/* Bottom bar */}
         <div className="pt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-stone-600">
-          <p>&copy; {new Date().getFullYear()} Coded Mind. All rights reserved.</p>
+          <p>&copy; 2026 Coded Mind. All rights reserved.</p>
           <p>Built with precision. Powered by data.</p>
         </div>
 

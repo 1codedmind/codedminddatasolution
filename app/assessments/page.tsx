@@ -1,8 +1,6 @@
 import AssessmentWorkspace from "@/components/AssessmentWorkspace";
 import { loadAssessmentChallenges } from "@/data/loadAssessmentChallenges";
 
-export const dynamic = "force-dynamic";
-
 export default function AssessmentsPage() {
   const challenges = loadAssessmentChallenges();
 
