@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState, useTransition } from "react";
+import { Eye, EyeOff } from "lucide-react";
 
 type AuthMode = "login" | "signup";
 
@@ -33,6 +34,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -137,17 +139,28 @@ export default function AuthForm({ mode }: AuthFormProps) {
                 <label htmlFor="password" className="mb-2 block text-sm font-medium text-slate-900">
                   Password
                 </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete={mode === "signup" ? "new-password" : "current-password"}
-                  required
-                  minLength={12}
-                  maxLength={72}
-                  className="w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500 focus:ring-4 focus:ring-amber-100"
-                  placeholder="Use 12+ chars with uppercase, lowercase, number, symbol"
-                />
+                <div className="relative">
+                  <input
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                    required
+                    minLength={12}
+                    maxLength={72}
+                    className="w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 pr-11 text-sm text-slate-900 outline-none transition focus:border-amber-500 focus:ring-4 focus:ring-amber-100"
+                    placeholder="Use 12+ chars with uppercase, lowercase, number, symbol"
+                  />
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute inset-y-0 right-3.5 flex items-center text-stone-400 hover:text-stone-600 transition-colors"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
                 {mode === "signup" ? (
                   <p className="mt-2 text-xs leading-relaxed text-stone-500">
                     Use 12-72 characters with at least one uppercase letter, one

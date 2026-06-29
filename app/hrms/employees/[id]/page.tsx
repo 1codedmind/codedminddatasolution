@@ -2,7 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import { getCurrentSession } from "@/lib/auth/session";
 import { hasPermission } from "@/lib/hrms/access";
 import { getEmployee } from "@/lib/hrms/employees";
-import { Mail, Phone, Building2, Briefcase, CalendarDays, MapPin, UserCheck } from "lucide-react";
+import { Mail, Phone, Building2, Briefcase, CalendarDays, MapPin, UserCheck, KeyRound } from "lucide-react";
 
 export const metadata = { title: "Employee Profile — HRMS" };
 
@@ -38,6 +38,7 @@ export default async function EmployeeProfilePage({
   if (!emp) notFound();
 
   const canEdit = hasPermission(session.role, "employees:update");
+  const isSelf = id === session.sub;
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
@@ -128,7 +129,7 @@ export default async function EmployeeProfilePage({
         </div>
       </div>
 
-      {/* Leave shortcut */}
+      {/* Actions */}
       <div className="mt-6 flex flex-wrap gap-3">
         <a
           href={`/hrms/leaves?member=${id}`}
@@ -142,6 +143,14 @@ export default async function EmployeeProfilePage({
         >
           Payslips
         </a>
+        {(isSelf || canEdit) && (
+          <a
+            href={`/hrms/employees/${id}/change-password`}
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-stone-800 border border-stone-700 text-stone-300 text-sm font-medium rounded-xl hover:border-stone-600 hover:text-white transition-colors"
+          >
+            <KeyRound size={14} /> {isSelf ? "Change password" : "Reset password"}
+          </a>
+        )}
       </div>
     </div>
   );

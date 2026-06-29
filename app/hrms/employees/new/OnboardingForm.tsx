@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Department } from "@/lib/hrms/departments";
+import PasswordInput from "@/components/PasswordInput";
 
 type Props = { departments: Pick<Department, "id" | "name">[]; isSuperadmin?: boolean };
 
@@ -63,14 +64,20 @@ export default function OnboardingForm({ departments, isSuperadmin = false }: Pr
           </select>
         </div>
 
-        <Field
-          label="Temporary password"
-          name="password"
-          type="password"
-          required
-          placeholder="Min 12 characters"
-          hint="Employee should change this on first login."
-        />
+        <div>
+          <label className="block text-xs font-semibold text-stone-400 mb-1.5">
+            Temporary password <span className="text-red-500">*</span>
+          </label>
+          <PasswordInput
+            name="password"
+            required
+            autoComplete="new-password"
+            minLength={12}
+            placeholder="Min 12 characters"
+            className={inputCls}
+          />
+          <p className="text-[11px] text-stone-600 mt-1">Employee should change this on first login.</p>
+        </div>
       </div>
 
       <div className="bg-stone-900 border border-stone-800 rounded-2xl p-6 space-y-5">
