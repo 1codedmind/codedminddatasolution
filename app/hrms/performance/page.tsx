@@ -28,7 +28,8 @@ export default async function PerformancePage({
   searchParams: Promise<{ status?: string }>;
 }) {
   const session = await getCurrentSession();
-  if (!session || !isHrmsUser(session.role)) redirect("/login");
+  if (!session) redirect("/login");
+  if (!isHrmsUser(session.role)) redirect("/");
 
   const { status = "" } = await searchParams;
   const isAdmin = isHrmsAdmin(session.role);

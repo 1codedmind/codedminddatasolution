@@ -62,7 +62,9 @@ export async function POST(request: NextRequest) {
     const token = createSessionToken({ sub: teamMember.id, email: teamMember.email, role: teamMember.role });
     const cookieStore = await cookies();
     cookieStore.set(AUTH_COOKIE_NAME, token, getSessionCookieOptions());
-    return NextResponse.json({ ok: true, redirectTo: "/admin" });
+    const hrmsRoles = ["superadmin", "admin", "employee"];
+    const redirectTo = hrmsRoles.includes(teamMember.role) ? "/hrms/dashboard" : "/admin";
+    return NextResponse.json({ ok: true, redirectTo });
   }
 
   const candidate = await findCandidateByEmail(email);

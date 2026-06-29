@@ -127,7 +127,7 @@ export async function updatePerformanceReview(
   const now = new Date().toISOString();
   await sql`
     UPDATE performance_reviews SET
-      rating                = COALESCE(${input.rating ?? null}::integer, rating),
+      rating                = COALESCE(${input.rating ?? null}, rating),
       strengths             = COALESCE(${input.strengths ?? null}, strengths),
       areas_for_improvement = COALESCE(${input.areasForImprovement ?? null}, areas_for_improvement),
       goals_next_period     = COALESCE(${input.goalsNextPeriod ?? null}, goals_next_period),

@@ -26,7 +26,8 @@ export default async function AttendancePage({
   searchParams: Promise<{ member?: string; month?: string; year?: string }>;
 }) {
   const session = await getCurrentSession();
-  if (!session || !isHrmsUser(session.role)) redirect("/login");
+  if (!session) redirect("/login");
+  if (!isHrmsUser(session.role)) redirect("/");
 
   const sp = await searchParams;
   const isAdmin = isHrmsAdmin(session.role);

@@ -40,7 +40,7 @@ export async function listAnnouncements(): Promise<Announcement[]> {
     LEFT JOIN departments d ON d.id = a.department_id
     LEFT JOIN team_members tm ON tm.id = a.created_by
     WHERE a.published_at IS NOT NULL
-      AND (a.expires_at IS NULL OR a.expires_at > NOW()::text)
+      AND (a.expires_at IS NULL OR a.expires_at > ${new Date().toISOString().slice(0, 10)})
     ORDER BY a.is_pinned DESC, a.published_at DESC
   `;
 }

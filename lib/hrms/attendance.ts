@@ -42,10 +42,10 @@ export async function listAttendance(opts: {
     JOIN team_members tm ON tm.id = al.member_id
     WHERE
       (${memberId ?? null} IS NULL OR al.member_id = ${memberId ?? null})
-      AND (${month ?? null}::integer IS NULL
-           OR CAST(SUBSTRING(al.date, 6, 2) AS INTEGER) = ${month ?? null}::integer)
-      AND (${year ?? null}::integer IS NULL
-           OR CAST(SUBSTRING(al.date, 1, 4) AS INTEGER) = ${year ?? null}::integer)
+      AND (${month ?? null} IS NULL
+           OR CAST(SUBSTRING(al.date, 6, 2) AS INTEGER) = ${month ?? null})
+      AND (${year ?? null} IS NULL
+           OR CAST(SUBSTRING(al.date, 1, 4) AS INTEGER) = ${year ?? null})
     ORDER BY al.date DESC, al.check_in_at DESC
     LIMIT ${limit}
   `;
