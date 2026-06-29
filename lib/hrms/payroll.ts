@@ -148,3 +148,70 @@ export async function createPayrollRun(input: {
   `;
   return { id };
 }
+
+export async function addPayrollItem(input: {
+  payrollRunId: string;
+  memberId: string;
+  basicSalary: number;
+  allowances?: number;
+  deductions?: number;
+  bonus?: number;
+  currency?: string;
+  notes?: string;
+}): Promise<{ id: string }> {
+  await ensureHrmsTables();
+  const sql = getSql();
+  const id = randomUUID();
+  const { basicSalary, allowances = 0, deductions = 0, bonus = 0 } = input;
+  const netPay = basicSalary + allowances + bonus - deductions;
+  await sql`
+    INSERT INTO payroll_items (
+      id, payroll_run_id, member_id, basic_salary, allowances, deductions,
+      bonus, net_pay, currency, payment_status
+    ) VALUES (
+      ${id}, ${input.payrollRunId}, ${input.memberId},
+      ${basicSalary}, ${allowances}, ${deductions}, ${bonus}, ${netPay},
+      ${input.currency ?? "INR"}, 'pending'
+    )
+  `;
+  return { id };
+}
+
+export async function updatePayrollRunStatus(
+  id: string,
+  status: "draft" | "processing" | "completed" | "cancelled"
+): Promise<void> {
+  await ensureHrmsTables();
+  const sql = getSql();
+  const runDate = status === "completed" ? new Date().toISOString() : null;
+  await sql`
+    UPDATE payroll_runs SET status = ${status}, run_date = COALESCE(${runDate}, run_date) WHERE id = ${id}
+  `;
+}
+
+export async function updatePayrollItemStatus(
+  itemId: string,
+  paymentStatus: "pending" | "paid" | "on_hold"
+): Promise<void> {
+  await ensureHrmsTables();
+  const sql = getSql();
+  const paidAt = paymentStatus === "paid" ? new Date().toISOString() : null;
+  await sql`
+    UPDATE payroll_items
+    SET payment_status = ${paymentStatus}, paid_at = COALESCE(${paidAt}, paid_at)
+    WHERE id = ${itemId}
+  `;
+}
+
+export async function removePayrollItem(itemId: string): Promise<void> {
+  await ensureHrmsTables();
+  const sql = getSql();
+  await sql`DELETE FROM payroll_items WHERE id = ${itemId}`;
+}
+
+export async function deletePayrollRun(id: string): Promise<void> {
+  await ensureHrmsTables();
+  const sql = getSql();
+  await sql`DELETE FROM payroll_items WHERE payroll_run_id = ${id}`;
+  await sql`DELETE FROM payroll_runs WHERE id = ${id}`;
+}

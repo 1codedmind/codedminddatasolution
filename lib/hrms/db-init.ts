@@ -207,4 +207,22 @@ async function _init() {
       ('lt-unpaid',    'Unpaid Leave',    NULL, false, ${now})
     ON CONFLICT (id) DO NOTHING
   `;
+
+  // Seed default asset categories
+  await sql`
+    INSERT INTO asset_categories (id, name, created_at) VALUES
+      ('cat-laptop',   'Laptop',          ${now}),
+      ('cat-mobile',   'Mobile Phone',    ${now}),
+      ('cat-monitor',  'Monitor',         ${now}),
+      ('cat-headset',  'Headset',         ${now}),
+      ('cat-keyboard', 'Keyboard / Mouse',${now}),
+      ('cat-other',    'Other',           ${now})
+    ON CONFLICT (id) DO NOTHING
+  `;
+
+  // Unique index on attendance to prevent duplicate daily entries per employee
+  await sql`
+    CREATE UNIQUE INDEX IF NOT EXISTS attendance_member_date_idx
+    ON attendance_logs(member_id, date)
+  `;
 }
