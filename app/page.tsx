@@ -1,4 +1,5 @@
 import Hero from "@/sections/Hero";
+import ResumeBuilderSpotlight from "@/sections/ResumeBuilderSpotlight";
 import ToolsSection from "@/sections/Tools";
 import Services from "@/sections/Services";
 import Solutions from "@/sections/Solutions";
@@ -10,6 +11,7 @@ export default function Home() {
   return (
     <main>
       <Hero />
+      <ResumeBuilderSpotlight />
       <ToolsSection />
       <Services />
       <Solutions />

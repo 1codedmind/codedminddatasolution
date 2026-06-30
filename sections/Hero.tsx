@@ -1,17 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Braces, Globe, Files, Clock, Lock, Hash } from "lucide-react";
+import { ArrowRight, Braces, Globe, Files, Clock, Lock, Hash, FileText } from "lucide-react";
 import { motion } from "framer-motion";
 import { fadeUp, container, containerFast } from "@/lib/motion";
 
 const featuredTools = [
-  { icon: Braces, label: "JSON Formatter",     href: "/tools/json-formatter" },
-  { icon: Globe,  label: "Timezone Converter",  href: "/tools/timezone-converter" },
-  { icon: Files,  label: "Merge PDF",           href: "/tools/pdf/merge" },
-  { icon: Clock,  label: "Timestamp Converter", href: "/tools/timestamp" },
-  { icon: Lock,   label: "Base64 Encoder",      href: "/tools/base64" },
-  { icon: Hash,   label: "UUID Generator",      href: "/tools/uuid-generator" },
+  { icon: FileText, label: "Resume Builder",     href: "/tools/resume-builder", highlight: true },
+  { icon: Braces,   label: "JSON Formatter",     href: "/tools/json-formatter" },
+  { icon: Globe,    label: "Timezone Converter", href: "/tools/timezone-converter" },
+  { icon: Files,    label: "Merge PDF",          href: "/tools/pdf/merge" },
+  { icon: Clock,    label: "Timestamp Converter",href: "/tools/timestamp" },
+  { icon: Lock,     label: "Base64 Encoder",     href: "/tools/base64" },
+  { icon: Hash,     label: "UUID Generator",     href: "/tools/uuid-generator" },
 ];
 
 export default function Hero() {
@@ -27,8 +28,8 @@ export default function Hero() {
           {/* Badge */}
           <motion.div variants={fadeUp} className="flex justify-center mb-8">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-100 rounded-full">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-              Free tools · Professional data services
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+              Resume Builder · Developer tools · Data services
             </span>
           </motion.div>
 
@@ -73,15 +74,26 @@ export default function Hero() {
             variants={containerFast}
             className="flex flex-wrap items-center justify-center gap-2.5"
           >
-            {featuredTools.map(({ icon: Icon, label, href }) => (
+            {featuredTools.map(({ icon: Icon, label, href, highlight }) => (
               <motion.div key={href} variants={fadeUp}>
-                <Link
-                  href={href}
-                  className="group inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-stone-600 bg-stone-50 border border-stone-200 rounded-xl hover:border-amber-300 hover:bg-amber-50 hover:text-amber-700 transition-all duration-150"
-                >
-                  <Icon size={13} className="text-stone-400 group-hover:text-amber-500 transition-colors" />
-                  {label}
-                </Link>
+                {highlight ? (
+                  <Link
+                    href={href}
+                    className="group inline-flex items-center gap-2 px-3.5 py-2 text-sm font-semibold text-white bg-stone-950 border border-stone-800 rounded-xl hover:bg-stone-800 transition-all duration-150 shadow-sm"
+                  >
+                    <Icon size={13} className="text-stone-400 group-hover:text-white transition-colors" />
+                    {label}
+                    <span className="text-[9px] font-bold text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 rounded-full px-1.5 py-0.5 leading-none">FREE</span>
+                  </Link>
+                ) : (
+                  <Link
+                    href={href}
+                    className="group inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-stone-600 bg-stone-50 border border-stone-200 rounded-xl hover:border-amber-300 hover:bg-amber-50 hover:text-amber-700 transition-all duration-150"
+                  >
+                    <Icon size={13} className="text-stone-400 group-hover:text-amber-500 transition-colors" />
+                    {label}
+                  </Link>
+                )}
               </motion.div>
             ))}
             <motion.div variants={fadeUp}>
