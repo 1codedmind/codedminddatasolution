@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useResumeStore } from "@/store/resumeStore";
 import { FONT_OPTIONS } from "@/lib/resume/types";
 import ModernPreview from "./templates/modern/Preview";
@@ -34,10 +34,17 @@ const TEMPLATES = {
   enfold:    EnfoldPreview,
 };
 
+const PAGE_SHADOW =
+  "0 0 0 1px rgba(255,255,255,0.04), 0 20px 60px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.3)";
+
 export default function ResumePreview() {
   const { data, config } = useResumeStore();
   const Template = TEMPLATES[config.template] ?? ModernPreview;
   const fontOption = FONT_OPTIONS[config.fontFamily ?? "inter"];
+  const fontScale = config.fontScale ?? 1;
+
+  const [pageCount, setPageCount] = useState(1);
+  const measureRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!fontOption?.google) return;
@@ -50,32 +57,89 @@ export default function ResumePreview() {
     document.head.appendChild(link);
   }, [config.fontFamily, fontOption?.google]);
 
-  return (
-    <div className="flex-1 overflow-auto bg-[#1c1c1e] flex flex-col items-center py-10 px-6">
-      <p className="text-[11px] font-medium text-white/25 mb-4 tracking-wider uppercase select-none">
-        Page 1 · A4
-      </p>
+  // Measure total content height via a hidden full render, then derive page count.
+  // ResizeObserver re-runs whenever the template content reflows.
+  useEffect(() => {
+    const el = measureRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => {
+      // getBoundingClientRect gives layout pixels; one A4 page = A4_HEIGHT * fontScale layout px
+      const h = el.getBoundingClientRect().height;
+      setPageCount(Math.max(1, Math.ceil(h / (A4_HEIGHT * fontScale))));
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [fontScale]);
 
+  return (
+    <div className="flex-1 overflow-auto bg-[#1c1c1e] flex flex-col items-center py-10 px-6 gap-8">
+
+      {/*
+        Hidden measurement render (position:fixed so it never affects layout).
+        Renders the full template at fontScale zoom so getBoundingClientRect
+        returns the actual scaled height we need for page counting.
+      */}
       <div
+        ref={measureRef}
+        aria-hidden="true"
         style={{
+          position: "fixed",
+          top: -9999,
+          left: -9999,
           width: A4_WIDTH,
-          minHeight: A4_HEIGHT,
-          boxShadow: "0 0 0 1px rgba(255,255,255,0.04), 0 20px 60px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.3)",
-          borderRadius: 2,
-          overflow: "hidden",
+          zoom: fontScale,
+          pointerEvents: "none",
+          visibility: "hidden",
         }}
-        className="bg-white"
       >
-        <div style={{ zoom: config.fontScale ?? 1 }}>
-          <Template
-            data={data}
-            color={config.accentColor}
-            fontFamily={fontOption?.css}
-          />
-        </div>
+        <Template data={data} color={config.accentColor} fontFamily={fontOption?.css} />
       </div>
 
-      <div className="h-10 shrink-0" />
+      {/* One card per PDF page */}
+      {Array.from({ length: pageCount }, (_, pageIndex) => (
+        <div key={pageIndex} className="flex flex-col items-center gap-3 shrink-0">
+          <p className="text-[11px] font-medium text-white/25 tracking-wider uppercase select-none">
+            {pageCount > 1 ? `Page ${pageIndex + 1} of ${pageCount} · A4` : "Page 1 · A4"}
+          </p>
+
+          {/*
+            Outer shell: layout pixels, provides shadow + rounded corners.
+            Inner shell: zoomed coordinate space, clips to exactly one A4 page.
+            Content: shifted up by pageIndex * A4_HEIGHT (template pixels) so
+            only the slice for this page is visible through the clipping window.
+          */}
+          <div
+            style={{
+              width: A4_WIDTH * fontScale,
+              height: A4_HEIGHT * fontScale,
+              borderRadius: 2,
+              overflow: "hidden",
+              flexShrink: 0,
+              boxShadow: PAGE_SHADOW,
+            }}
+            className="bg-white"
+          >
+            <div
+              style={{
+                zoom: fontScale,
+                width: A4_WIDTH,
+                height: A4_HEIGHT,
+                overflow: "hidden",
+              }}
+            >
+              <div style={{ marginTop: pageIndex === 0 ? 0 : -(pageIndex * A4_HEIGHT) }}>
+                <Template
+                  data={data}
+                  color={config.accentColor}
+                  fontFamily={fontOption?.css}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+
+      <div className="h-4 shrink-0" />
     </div>
   );
 }

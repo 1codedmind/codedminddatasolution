@@ -34,6 +34,9 @@ function buildContentSecurityPolicy() {
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
+  turbopack: {
+    root: __dirname,
+  },
   async headers() {
     return [
       {

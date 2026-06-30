@@ -14,23 +14,26 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/tools/base64",              priority: 0.8, changefreq: "monthly" as const },
     { path: "/tools/word-counter",        priority: 0.7, changefreq: "monthly" as const },
     { path: "/tools/password-generator",  priority: 0.7, changefreq: "monthly" as const },
+    // Resume builder
+    { path: "/tools/resume-builder",      priority: 0.9, changefreq: "monthly" as const },
     // PDF tools
     { path: "/tools/pdf",                 priority: 0.9, changefreq: "monthly" as const },
     { path: "/tools/pdf/merge",           priority: 0.9, changefreq: "monthly" as const },
     { path: "/tools/pdf/split",           priority: 0.9, changefreq: "monthly" as const },
+    { path: "/tools/pdf/compress",        priority: 0.9, changefreq: "monthly" as const },
     { path: "/tools/pdf/rotate",          priority: 0.8, changefreq: "monthly" as const },
     { path: "/tools/pdf/jpg-to-pdf",      priority: 0.8, changefreq: "monthly" as const },
   ];
 
   return [
-    { url: BASE,          lastModified: now, changeFrequency: "weekly",  priority: 1.0 },
-    { url: `${BASE}/tools`, lastModified: now, changeFrequency: "weekly",  priority: 0.9 },
+    { url: BASE,             lastModified: now, changeFrequency: "weekly",  priority: 1.0 },
+    { url: `${BASE}/tools`,  lastModified: now, changeFrequency: "weekly",  priority: 0.9 },
     ...tools.map(({ path, priority, changefreq }) => ({
       url: `${BASE}${path}`,
       lastModified: now,
       changeFrequency: changefreq,
       priority,
     })),
-    { url: `${BASE}/careers`, lastModified: now, changeFrequency: "weekly",  priority: 0.6 },
+    { url: `${BASE}/careers`, lastModified: now, changeFrequency: "weekly", priority: 0.6 },
   ];
 }

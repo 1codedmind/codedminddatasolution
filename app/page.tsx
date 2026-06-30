@@ -1,23 +1,5 @@
-import Hero from "@/sections/Hero";
-import ResumeBuilderSpotlight from "@/sections/ResumeBuilderSpotlight";
-import ToolsSection from "@/sections/Tools";
-import Services from "@/sections/Services";
-import Solutions from "@/sections/Solutions";
-import WhyUs from "@/sections/WhyUs";
-import Process from "@/sections/Process";
-import CTA from "@/sections/CTA";
+import Enhanced3DLanding from "@/sections/Enhanced3DLanding";
 
 export default function Home() {
-  return (
-    <main>
-      <Hero />
-      <ResumeBuilderSpotlight />
-      <ToolsSection />
-      <Services />
-      <Solutions />
-      <WhyUs />
-      <Process />
-      <CTA />
-    </main>
-  );
+  return <Enhanced3DLanding />;
 }

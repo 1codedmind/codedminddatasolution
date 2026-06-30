@@ -17,6 +17,7 @@ import {
   SortableContext, verticalListSortingStrategy, useSortable, arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import ResumeUpload from "./ResumeUpload";
 import CustomSectionEditor from "./sections/CustomSectionEditor";
 import PersonalInfoEditor from "./sections/PersonalInfoEditor";
 import SummaryEditor from "./sections/SummaryEditor";
@@ -498,6 +499,11 @@ export default function EditorSidebar() {
       {activeTab === "content" && (
         <>
           <div className="flex-1 overflow-y-auto">
+            <div className="py-1 px-3 pt-3">
+              {/* Resume upload */}
+              <ResumeUpload />
+            </div>
+
             <div className="py-1">
               {/* Personal info — always first, not draggable */}
               <StaticSectionRow id="personalInfo" />
