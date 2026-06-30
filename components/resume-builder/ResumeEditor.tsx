@@ -1,20 +1,45 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useResumeStore } from "@/store/resumeStore";
 import { scoreResume, scoreColor } from "@/lib/resume/score";
-import { TEMPLATE_META } from "@/lib/resume/types";
-import { Download, Loader2, ChevronDown, LayoutTemplate, ArrowLeft } from "lucide-react";
+import { Download, Loader2, ArrowLeft, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import Link from "next/link";
 import EditorSidebar from "./EditorSidebar";
 import ResumePreview from "./ResumePreview";
-import TemplateSelector from "./TemplateSelector";
 
 export default function ResumeEditor() {
   const { data, config, isDownloading, setIsDownloading } = useResumeStore();
-  const [showTemplates, setShowTemplates] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarWidth, setSidebarWidth] = useState(300);
+  const isResizing = useRef(false);
+  const startX = useRef(0);
+  const startWidth = useRef(0);
   const { score } = scoreResume(data);
-  const color = scoreColor(score);
+  const scoreCol = scoreColor(score);
+
+  const startResize = useCallback((e: React.MouseEvent) => {
+    isResizing.current = true;
+    startX.current = e.clientX;
+    startWidth.current = sidebarWidth;
+    document.body.style.cursor = "ew-resize";
+    document.body.style.userSelect = "none";
+
+    function onMouseMove(ev: MouseEvent) {
+      if (!isResizing.current) return;
+      const delta = ev.clientX - startX.current;
+      setSidebarWidth(Math.max(240, Math.min(480, startWidth.current + delta)));
+    }
+    function onMouseUp() {
+      isResizing.current = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+    }
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+  }, [sidebarWidth]);
 
   async function handleDownload() {
     if (isDownloading) return;
@@ -43,9 +68,8 @@ export default function ResumeEditor() {
 
   return (
     <div className="h-screen flex flex-col bg-white overflow-hidden">
-      {/* Top Bar */}
+      {/* Toolbar */}
       <header className="h-[52px] border-b border-stone-200 flex items-center px-3 gap-2 shrink-0 bg-white shadow-[0_1px_0_0_rgba(0,0,0,0.05)]">
-        {/* Back */}
         <Link
           href="/tools"
           className="flex items-center justify-center w-8 h-8 rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-all"
@@ -54,39 +78,31 @@ export default function ResumeEditor() {
           <ArrowLeft size={16} />
         </Link>
 
-        <div className="w-px h-4 bg-stone-200 mx-1" />
+        <div className="w-px h-4 bg-stone-200" />
 
-        {/* Template + Color — combined pill */}
         <button
-          onClick={() => setShowTemplates(true)}
-          className="flex items-center gap-2.5 h-8 px-3 rounded-lg border border-stone-200 bg-stone-50 hover:bg-white hover:border-stone-300 hover:shadow-sm transition-all text-sm text-stone-700 font-medium"
+          onClick={() => setSidebarOpen((v) => !v)}
+          className="flex items-center justify-center w-8 h-8 rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-all"
+          title={sidebarOpen ? "Hide panel" : "Show panel"}
         >
-          <LayoutTemplate size={14} className="text-stone-400 shrink-0" />
-          <span className="hidden sm:inline">{TEMPLATE_META[config.template].label}</span>
-          <div
-            className="w-3.5 h-3.5 rounded-full ring-1 ring-white ring-offset-1 ring-offset-stone-50 shrink-0"
-            style={{ backgroundColor: config.accentColor, boxShadow: `0 0 0 1px ${config.accentColor}40` }}
-          />
-          <ChevronDown size={12} className="text-stone-400" />
+          {sidebarOpen ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
         </button>
 
         <div className="flex-1" />
 
-        {/* ATS Score pill */}
+        {/* ATS score */}
         <div className="flex items-center gap-2 h-8 px-3 rounded-lg bg-stone-50 border border-stone-200">
           <svg width="14" height="14" viewBox="0 0 14 14">
             <circle cx="7" cy="7" r="5.5" fill="none" stroke="#e7e5e4" strokeWidth="2" />
             <circle
-              cx="7" cy="7" r="5.5"
-              fill="none"
-              stroke={color}
-              strokeWidth="2"
+              cx="7" cy="7" r="5.5" fill="none"
+              stroke={scoreCol} strokeWidth="2"
               strokeDasharray={`${(score / 100) * 34.56} 34.56`}
               strokeLinecap="round"
               transform="rotate(-90 7 7)"
             />
           </svg>
-          <span className="text-xs font-semibold" style={{ color }}>{score}%</span>
+          <span className="text-xs font-semibold" style={{ color: scoreCol }}>{score}%</span>
           <span className="text-xs text-stone-400 hidden sm:inline">ATS</span>
         </div>
 
@@ -105,11 +121,27 @@ export default function ResumeEditor() {
 
       {/* Body */}
       <div className="flex flex-1 overflow-hidden">
-        <EditorSidebar />
+        {/* Sidebar — animated collapse */}
+        <div
+          className="shrink-0 overflow-hidden transition-[width] duration-200 border-r border-stone-200"
+          style={{ width: sidebarOpen ? sidebarWidth : 0 }}
+        >
+          {/* Inner div keeps the sidebar at full width so content doesn't reflow during animation */}
+          <div className="h-full" style={{ width: sidebarWidth }}>
+            <EditorSidebar />
+          </div>
+        </div>
+
+        {/* Resize handle */}
+        {sidebarOpen && (
+          <div
+            className="w-[4px] shrink-0 cursor-ew-resize hover:bg-blue-400/40 active:bg-blue-500/60 transition-colors"
+            onMouseDown={startResize}
+          />
+        )}
+
         <ResumePreview />
       </div>
-
-      {showTemplates && <TemplateSelector onClose={() => setShowTemplates(false)} />}
     </div>
   );
 }

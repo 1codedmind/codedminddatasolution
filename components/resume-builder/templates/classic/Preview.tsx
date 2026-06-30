@@ -3,6 +3,7 @@ import type { ResumeData } from "@/lib/resume/types";
 interface Props {
   data: ResumeData;
   color: string;
+  fontFamily?: string;
 }
 
 function formatDate(d: string): string {
@@ -20,7 +21,7 @@ function SectionHeading({ label }: { label: string }) {
   );
 }
 
-export default function ClassicPreview({ data, color }: Props) {
+export default function ClassicPreview({ data, color, fontFamily }: Props) {
   const { personalInfo: p, summary, experience, education, skills, certifications, projects, languages, sectionOrder } = data;
 
   const sectionMap: Record<string, React.ReactNode> = {
@@ -113,7 +114,7 @@ export default function ClassicPreview({ data, color }: Props) {
   };
 
   return (
-    <div style={{ fontFamily: "Georgia, 'Times New Roman', serif", background: "#fff", width: "100%", minHeight: "100%", padding: "36px 40px", boxSizing: "border-box" }}>
+    <div style={{ fontFamily: fontFamily || "Georgia, 'Times New Roman', serif", background: "#fff", width: "100%", minHeight: "100%", padding: "36px 40px", boxSizing: "border-box" }}>
       {/* Header */}
       <div style={{ textAlign: "center", marginBottom: 20, paddingBottom: 16, borderBottom: "2px solid #111827" }}>
         <h1 style={{ fontSize: 28, fontWeight: 700, color: "#111827", margin: "0 0 4px 0", letterSpacing: "-0.01em" }}>{p.fullName || "Your Name"}</h1>

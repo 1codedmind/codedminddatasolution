@@ -3,6 +3,7 @@ import type { ResumeData } from "@/lib/resume/types";
 interface Props {
   data: ResumeData;
   color: string;
+  fontFamily?: string;
 }
 
 function formatDate(d: string): string {
@@ -33,7 +34,7 @@ function MainSection({ label, children, color }: { label: string; children: Reac
   );
 }
 
-export default function ExecutivePreview({ data, color }: Props) {
+export default function ExecutivePreview({ data, color, fontFamily }: Props) {
   const { personalInfo: p, summary, experience, education, skills, certifications, projects, languages, sectionOrder } = data;
 
   const mainSections: Record<string, React.ReactNode> = {
@@ -95,7 +96,7 @@ export default function ExecutivePreview({ data, color }: Props) {
   };
 
   return (
-    <div style={{ fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif", background: "#fff", width: "100%", minHeight: "100%", display: "flex", boxSizing: "border-box" }}>
+    <div style={{ fontFamily: fontFamily || "'Helvetica Neue', Helvetica, Arial, sans-serif", background: "#fff", width: "100%", minHeight: "100%", display: "flex", boxSizing: "border-box" }}>
       {/* Sidebar */}
       <div style={{ width: "34%", background: color, padding: "32px 20px", minHeight: "100%", boxSizing: "border-box" }}>
         {/* Photo placeholder */}

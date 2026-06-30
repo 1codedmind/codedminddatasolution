@@ -8,6 +8,7 @@ import type {
   ResumeData,
   ResumeConfig,
   TemplateName,
+  FontOption,
   SectionName,
   Experience,
   Education,
@@ -82,6 +83,10 @@ interface ResumeStore {
   addSection: (section: SectionName) => void;
   removeSection: (section: SectionName) => void;
 
+  // Config extras
+  setFontScale: (scale: number) => void;
+  setFontFamily: (family: FontOption) => void;
+
   // Download
   setIsDownloading: (v: boolean) => void;
 }
@@ -90,7 +95,7 @@ export const useResumeStore = create<ResumeStore>()(
   persist(
     (set) => ({
   data: sampleResume(),
-  config: { template: "modern", accentColor: "#1d4ed8" },
+  config: { template: "modern", accentColor: "#1d4ed8", fontScale: 1, fontFamily: "inter" },
   activeSection: null,
   isDownloading: false,
 
@@ -382,6 +387,9 @@ export const useResumeStore = create<ResumeStore>()(
     set((s) => ({
       data: { ...s.data, sectionOrder: s.data.sectionOrder.filter((k) => k !== section) },
     })),
+
+  setFontScale: (scale) => set((s) => ({ config: { ...s.config, fontScale: scale } })),
+  setFontFamily: (family) => set((s) => ({ config: { ...s.config, fontFamily: family } })),
 
   setIsDownloading: (v) => set({ isDownloading: v }),
     }),

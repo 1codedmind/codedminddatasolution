@@ -7,6 +7,13 @@ import ClassicPDF from "@/components/resume-builder/templates/pdf/ClassicPDF";
 import MinimalPDF from "@/components/resume-builder/templates/pdf/MinimalPDF";
 import ExecutivePDF from "@/components/resume-builder/templates/pdf/ExecutivePDF";
 import CreativePDF from "@/components/resume-builder/templates/pdf/CreativePDF";
+import CompactPDF from "@/components/resume-builder/templates/pdf/CompactPDF";
+import SharpPDF from "@/components/resume-builder/templates/pdf/SharpPDF";
+import ElegantPDF from "@/components/resume-builder/templates/pdf/ElegantPDF";
+import CascadePDF from "@/components/resume-builder/templates/pdf/CascadePDF";
+import CubicPDF from "@/components/resume-builder/templates/pdf/CubicPDF";
+import NanicaPDF from "@/components/resume-builder/templates/pdf/NanicaPDF";
+import EnfoldPDF from "@/components/resume-builder/templates/pdf/EnfoldPDF";
 
 const PDF_COMPONENTS = {
   modern:    ModernPDF,
@@ -14,6 +21,13 @@ const PDF_COMPONENTS = {
   minimal:   MinimalPDF,
   executive: ExecutivePDF,
   creative:  CreativePDF,
+  compact:   CompactPDF,
+  sharp:     SharpPDF,
+  elegant:   ElegantPDF,
+  cascade:   CascadePDF,
+  cubic:     CubicPDF,
+  nanica:    NanicaPDF,
+  enfold:    EnfoldPDF,
 };
 
 export async function POST(req: NextRequest) {
@@ -27,7 +41,7 @@ export async function POST(req: NextRequest) {
 
     const Component = PDF_COMPONENTS[config.template] ?? ModernPDF;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const element = React.createElement(Component, { data, color: config.accentColor }) as any;
+    const element = React.createElement(Component, { data, color: config.accentColor, fontFamily: config.fontFamily }) as any;
     const buffer = await renderToBuffer(element);
     const uint8 = new Uint8Array(buffer);
 
