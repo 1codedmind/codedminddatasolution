@@ -16,13 +16,15 @@ import type {
   Certification,
   Project,
   Language,
+  CustomSection,
+  CustomSectionItem,
 } from "@/lib/resume/types";
 import { sampleResume } from "@/lib/resume/defaults";
 
 interface ResumeStore {
   data: ResumeData;
   config: ResumeConfig;
-  activeSection: SectionName | null;
+  activeSection: string | null;
   isDownloading: boolean;
 
   // Config
@@ -30,7 +32,7 @@ interface ResumeStore {
   setAccentColor: (c: string) => void;
 
   // Navigation
-  setActiveSection: (s: SectionName | null) => void;
+  setActiveSection: (s: string | null) => void;
 
   // Personal Info
   updatePersonalInfo: (patch: Partial<ResumeData["personalInfo"]>) => void;
@@ -79,9 +81,20 @@ interface ResumeStore {
   removeLanguage: (id: string) => void;
 
   // Section order
-  reorderSections: (order: SectionName[]) => void;
+  reorderSections: (order: string[]) => void;
   addSection: (section: SectionName) => void;
   removeSection: (section: SectionName) => void;
+
+  // Custom sections
+  addCustomSection: (title: string) => void;
+  removeCustomSection: (id: string) => void;
+  renameCustomSection: (id: string, title: string) => void;
+  addCustomSectionItem: (sectionId: string) => void;
+  updateCustomSectionItem: (sectionId: string, itemId: string, patch: Partial<CustomSectionItem>) => void;
+  removeCustomSectionItem: (sectionId: string, itemId: string) => void;
+  addCustomSectionItemBullet: (sectionId: string, itemId: string) => void;
+  updateCustomSectionItemBullet: (sectionId: string, itemId: string, idx: number, text: string) => void;
+  removeCustomSectionItemBullet: (sectionId: string, itemId: string, idx: number) => void;
 
   // Config extras
   setFontScale: (scale: number) => void;
@@ -386,6 +399,115 @@ export const useResumeStore = create<ResumeStore>()(
   removeSection: (section) =>
     set((s) => ({
       data: { ...s.data, sectionOrder: s.data.sectionOrder.filter((k) => k !== section) },
+    })),
+
+  addCustomSection: (title) =>
+    set((s) => {
+      const id = uuid();
+      return {
+        data: {
+          ...s.data,
+          customSections: [...(s.data.customSections ?? []), { id, title, items: [] }],
+          sectionOrder: [...s.data.sectionOrder, id],
+        },
+      };
+    }),
+
+  removeCustomSection: (id) =>
+    set((s) => ({
+      data: {
+        ...s.data,
+        customSections: (s.data.customSections ?? []).filter((cs) => cs.id !== id),
+        sectionOrder: s.data.sectionOrder.filter((k) => k !== id),
+      },
+    })),
+
+  renameCustomSection: (id, title) =>
+    set((s) => ({
+      data: {
+        ...s.data,
+        customSections: (s.data.customSections ?? []).map((cs) =>
+          cs.id === id ? { ...cs, title } : cs
+        ),
+      },
+    })),
+
+  addCustomSectionItem: (sectionId) =>
+    set((s) => ({
+      data: {
+        ...s.data,
+        customSections: (s.data.customSections ?? []).map((cs) =>
+          cs.id === sectionId
+            ? { ...cs, items: [...cs.items, { id: uuid(), heading: "", subtitle: "", date: "", description: "", bullets: [] }] }
+            : cs
+        ),
+      },
+    })),
+
+  updateCustomSectionItem: (sectionId, itemId, patch) =>
+    set((s) => ({
+      data: {
+        ...s.data,
+        customSections: (s.data.customSections ?? []).map((cs) =>
+          cs.id === sectionId
+            ? { ...cs, items: cs.items.map((it) => (it.id === itemId ? { ...it, ...patch } : it)) }
+            : cs
+        ),
+      },
+    })),
+
+  removeCustomSectionItem: (sectionId, itemId) =>
+    set((s) => ({
+      data: {
+        ...s.data,
+        customSections: (s.data.customSections ?? []).map((cs) =>
+          cs.id === sectionId ? { ...cs, items: cs.items.filter((it) => it.id !== itemId) } : cs
+        ),
+      },
+    })),
+
+  addCustomSectionItemBullet: (sectionId, itemId) =>
+    set((s) => ({
+      data: {
+        ...s.data,
+        customSections: (s.data.customSections ?? []).map((cs) =>
+          cs.id === sectionId
+            ? { ...cs, items: cs.items.map((it) => it.id === itemId ? { ...it, bullets: [...it.bullets, ""] } : it) }
+            : cs
+        ),
+      },
+    })),
+
+  updateCustomSectionItemBullet: (sectionId, itemId, idx, text) =>
+    set((s) => ({
+      data: {
+        ...s.data,
+        customSections: (s.data.customSections ?? []).map((cs) =>
+          cs.id === sectionId
+            ? {
+                ...cs,
+                items: cs.items.map((it) => {
+                  if (it.id !== itemId) return it;
+                  const bullets = [...it.bullets];
+                  bullets[idx] = text;
+                  return { ...it, bullets };
+                }),
+              }
+            : cs
+        ),
+      },
+    })),
+
+  removeCustomSectionItemBullet: (sectionId, itemId, idx) =>
+    set((s) => ({
+      data: {
+        ...s.data,
+        customSections: (s.data.customSections ?? []).map((cs) =>
+          cs.id === sectionId
+            ? { ...cs, items: cs.items.map((it) => it.id === itemId ? { ...it, bullets: it.bullets.filter((_, i) => i !== idx) } : it) }
+            : cs
+        ),
+      },
     })),
 
   setFontScale: (scale) => set((s) => ({ config: { ...s.config, fontScale: scale } })),

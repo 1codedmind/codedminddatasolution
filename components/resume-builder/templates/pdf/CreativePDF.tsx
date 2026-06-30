@@ -1,11 +1,12 @@
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import type { ResumeData } from "@/lib/resume/types";
-import { formatDate, PDFBullets } from "./shared";
+import { formatDate, PDFBullets, renderPDFCustomSection } from "./shared";
 
 interface Props { data: ResumeData; color: string; }
 
 export default function CreativePDF({ data, color }: Props) {
   const { personalInfo: p, summary, experience, education, skills, certifications, projects, languages, sectionOrder } = data;
+  const fonts = { regular: "Helvetica", bold: "Helvetica-Bold", italic: "Helvetica-Oblique", boldItalic: "Helvetica-BoldOblique" };
 
   const s = StyleSheet.create({
     page: { backgroundColor: "#fff", fontFamily: "Helvetica", fontSize: 10 },
@@ -139,7 +140,7 @@ export default function CreativePDF({ data, color }: Props) {
           </View>
         </View>
         <View style={s.body}>
-          {sectionOrder.map((key) => sections[key] ?? null)}
+          {sectionOrder.map((key) => sections[key] ?? renderPDFCustomSection(data, key, color, fonts))}
         </View>
       </Page>
     </Document>

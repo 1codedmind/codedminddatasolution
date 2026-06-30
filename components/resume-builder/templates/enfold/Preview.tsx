@@ -1,4 +1,5 @@
 import type { ResumeData } from "@/lib/resume/types";
+import { renderCustomSection } from "@/lib/resume/customSectionHelper";
 
 interface Props { data: ResumeData; color: string; fontFamily?: string; }
 
@@ -172,7 +173,7 @@ export default function EnfoldPreview({ data, color, fontFamily }: Props) {
 
         {/* Main */}
         <div style={{ flex: 1, padding: "22px 26px" }}>
-          {orderedMain.map(k => mainMap[k] ?? null)}
+          {orderedMain.map(k => mainMap[k] ?? renderCustomSection(data, k, color, fontFamily))}
         </div>
       </div>
     </div>

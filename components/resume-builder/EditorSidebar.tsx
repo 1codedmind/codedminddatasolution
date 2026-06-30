@@ -7,7 +7,7 @@ import type { SectionName, TemplateName, FontOption } from "@/lib/resume/types";
 import { TEMPLATE_META, ACCENT_COLORS, FONT_OPTIONS } from "@/lib/resume/types";
 import {
   User, AlignLeft, Briefcase, GraduationCap, Zap, Award, Code2, Globe,
-  CheckCircle2, Circle, ChevronRight, Plus, X, GripVertical, Check,
+  CheckCircle2, Circle, ChevronRight, Plus, X, GripVertical, Check, Layers,
 } from "lucide-react";
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors,
@@ -17,6 +17,7 @@ import {
   SortableContext, verticalListSortingStrategy, useSortable, arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import CustomSectionEditor from "./sections/CustomSectionEditor";
 import PersonalInfoEditor from "./sections/PersonalInfoEditor";
 import SummaryEditor from "./sections/SummaryEditor";
 import ExperienceEditor from "./sections/ExperienceEditor";
@@ -335,17 +336,34 @@ function StaticSectionRow({ id }: { id: string }) {
 }
 
 // ─── Draggable section row ──────────────────────────────────────────────────
-function SortableSectionRow({ id }: { id: SectionName }) {
+function SortableSectionRow({ id }: { id: string }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
-  const { data, activeSection, setActiveSection, removeSection } = useResumeStore();
+  const { data, activeSection, setActiveSection, removeSection, removeCustomSection } = useResumeStore();
 
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 };
-  const { label, Icon } = SECTION_META[id];
+
+  const isCustom = !(id in SECTION_META);
+  const customSection = isCustom ? (data.customSections ?? []).find((s) => s.id === id) : null;
+  const label = isCustom ? (customSection?.title || "Custom Section") : SECTION_META[id].label;
+  const Icon = isCustom ? Layers : SECTION_META[id].Icon;
+
   const isOpen = activeSection === id;
-  const isOptional = OPTIONAL_SECTIONS.includes(id);
-  const Editor = SECTION_EDITORS[id];
-  const arr = data[id as keyof typeof data];
-  const count = Array.isArray(arr) ? (arr as unknown[]).length : null;
+  const isOptional = isCustom || OPTIONAL_SECTIONS.includes(id as SectionName);
+  const Editor = isCustom ? CustomSectionEditor : SECTION_EDITORS[id];
+
+  let count: number | null = null;
+  if (isCustom) {
+    count = customSection?.items.length ?? 0;
+  } else {
+    const arr = data[id as keyof typeof data];
+    count = Array.isArray(arr) ? (arr as unknown[]).length : null;
+  }
+
+  function handleRemove() {
+    if (activeSection === id) setActiveSection(null);
+    if (isCustom) removeCustomSection(id);
+    else removeSection(id as SectionName);
+  }
 
   return (
     <div ref={setNodeRef} style={style} {...attributes}>
@@ -382,13 +400,10 @@ function SortableSectionRow({ id }: { id: SectionName }) {
           <ChevronRight size={14} className={`text-stone-300 transition-transform duration-200 shrink-0 ${isOpen ? "rotate-90" : ""}`} />
         </button>
 
-        {/* Remove — optional sections only */}
+        {/* Remove — optional + custom sections */}
         {isOptional && (
           <button
-            onClick={() => {
-              if (activeSection === id) setActiveSection(null);
-              removeSection(id);
-            }}
+            onClick={handleRemove}
             title={`Remove ${label}`}
             className="opacity-0 group-hover:opacity-100 mr-2 w-5 h-5 flex items-center justify-center rounded text-stone-300 hover:text-red-500 hover:bg-red-50 transition-all shrink-0"
           >
@@ -409,10 +424,12 @@ function SortableSectionRow({ id }: { id: SectionName }) {
 // ─── Main sidebar ───────────────────────────────────────────────────────────
 export default function EditorSidebar() {
   const [activeTab, setActiveTab] = useState<"content" | "design">("content");
+  const [newSectionName, setNewSectionName] = useState("");
+  const [addingCustom, setAddingCustom] = useState(false);
 
   const {
     data, config, activeSection, setActiveSection,
-    addSection, reorderSections,
+    addSection, reorderSections, addCustomSection,
     setTemplate, setAccentColor, setFontScale, setFontFamily,
   } = useResumeStore();
 
@@ -428,8 +445,8 @@ export default function EditorSidebar() {
 
   function handleDragEnd({ active, over }: DragEndEvent) {
     if (!over || active.id === over.id) return;
-    const oldIdx = data.sectionOrder.indexOf(active.id as SectionName);
-    const newIdx = data.sectionOrder.indexOf(over.id as SectionName);
+    const oldIdx = data.sectionOrder.indexOf(active.id as string);
+    const newIdx = data.sectionOrder.indexOf(over.id as string);
     if (oldIdx !== -1 && newIdx !== -1) {
       reorderSections(arrayMove(data.sectionOrder, oldIdx, newIdx));
     }
@@ -494,33 +511,86 @@ export default function EditorSidebar() {
                 </SortableContext>
               </DndContext>
 
-              {/* Add section — always shown, shows available optional sections */}
+              {/* Add section panel */}
               <div className="mx-3 mt-3 mb-2">
-                {hiddenOptional.length > 0 ? (
-                  <>
-                    <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest px-1 mb-2">Add section</p>
-                    <div className="flex flex-col gap-1">
-                      {hiddenOptional.map((sec) => {
-                        const { label, Icon } = SECTION_META[sec];
-                        return (
-                          <button
-                            key={sec}
-                            onClick={() => addSection(sec)}
-                            className="group flex items-center gap-2.5 px-3 py-2 rounded-lg border border-dashed border-stone-200 text-stone-400 hover:border-stone-400 hover:text-stone-700 hover:bg-white transition-all"
-                          >
-                            <span className="flex items-center justify-center w-6 h-6 rounded-md bg-stone-100 group-hover:bg-stone-200 transition-colors shrink-0">
-                              <Icon size={12} strokeWidth={2} className="text-stone-500" />
-                            </span>
-                            <span className="flex-1 text-[12px] font-medium text-left">{label}</span>
-                            <Plus size={12} className="text-stone-300 group-hover:text-stone-500 transition-colors" />
-                          </button>
-                        );
-                      })}
+                <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest px-1 mb-2">Add section</p>
+                <div className="flex flex-col gap-1">
+                  {/* Optional predefined sections */}
+                  {hiddenOptional.map((sec) => {
+                    const { label, Icon } = SECTION_META[sec];
+                    return (
+                      <button
+                        key={sec}
+                        onClick={() => addSection(sec)}
+                        className="group flex items-center gap-2.5 px-3 py-2 rounded-lg border border-dashed border-stone-200 text-stone-400 hover:border-stone-400 hover:text-stone-700 hover:bg-white transition-all"
+                      >
+                        <span className="flex items-center justify-center w-6 h-6 rounded-md bg-stone-100 group-hover:bg-stone-200 transition-colors shrink-0">
+                          <Icon size={12} strokeWidth={2} className="text-stone-500" />
+                        </span>
+                        <span className="flex-1 text-[12px] font-medium text-left">{label}</span>
+                        <Plus size={12} className="text-stone-300 group-hover:text-stone-500 transition-colors" />
+                      </button>
+                    );
+                  })}
+
+                  {/* Custom section */}
+                  {addingCustom ? (
+                    <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-stone-300 bg-white">
+                      <Layers size={12} className="text-stone-400 shrink-0" />
+                      <input
+                        autoFocus
+                        className="flex-1 text-[12px] outline-none placeholder-stone-300"
+                        placeholder="Section name…"
+                        value={newSectionName}
+                        onChange={(e) => setNewSectionName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && newSectionName.trim()) {
+                            addCustomSection(newSectionName.trim());
+                            setNewSectionName("");
+                            setAddingCustom(false);
+                          }
+                          if (e.key === "Escape") {
+                            setNewSectionName("");
+                            setAddingCustom(false);
+                          }
+                        }}
+                      />
+                      <button
+                        onClick={() => {
+                          if (newSectionName.trim()) {
+                            addCustomSection(newSectionName.trim());
+                            setNewSectionName("");
+                          }
+                          setAddingCustom(false);
+                        }}
+                        className="text-[10px] font-semibold text-stone-600 hover:text-stone-900 bg-stone-100 hover:bg-stone-200 rounded px-2 py-0.5 transition-colors"
+                      >
+                        Add
+                      </button>
+                      <button
+                        onClick={() => { setNewSectionName(""); setAddingCustom(false); }}
+                        className="text-stone-300 hover:text-stone-500"
+                      >
+                        <X size={11} />
+                      </button>
                     </div>
-                  </>
-                ) : (
-                  <p className="text-[11px] text-stone-300 text-center py-1">
-                    All sections added · hover a section to remove
+                  ) : (
+                    <button
+                      onClick={() => setAddingCustom(true)}
+                      className="group flex items-center gap-2.5 px-3 py-2 rounded-lg border border-dashed border-stone-200 text-stone-400 hover:border-stone-400 hover:text-stone-700 hover:bg-white transition-all"
+                    >
+                      <span className="flex items-center justify-center w-6 h-6 rounded-md bg-stone-100 group-hover:bg-stone-200 transition-colors shrink-0">
+                        <Layers size={12} strokeWidth={2} className="text-stone-500" />
+                      </span>
+                      <span className="flex-1 text-[12px] font-medium text-left">Custom Section</span>
+                      <Plus size={12} className="text-stone-300 group-hover:text-stone-500 transition-colors" />
+                    </button>
+                  )}
+                </div>
+
+                {hiddenOptional.length === 0 && (
+                  <p className="text-[10px] text-stone-300 text-center pt-2">
+                    All built-in sections added · hover to remove
                   </p>
                 )}
               </div>

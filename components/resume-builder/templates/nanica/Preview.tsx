@@ -1,4 +1,5 @@
 import type { ResumeData } from "@/lib/resume/types";
+import { renderCustomSection } from "@/lib/resume/customSectionHelper";
 
 interface Props { data: ResumeData; color: string; fontFamily?: string; }
 
@@ -147,7 +148,7 @@ export default function NanicaPreview({ data, color, fontFamily }: Props) {
         </div>
         <div style={{ height: 3, background: color, marginTop: 12, borderRadius: 1 }} />
       </div>
-      {sectionOrder.map(k => sectionMap[k] ?? null)}
+      {sectionOrder.map(k => sectionMap[k] ?? renderCustomSection(data, k, color, fontFamily))}
     </div>
   );
 }

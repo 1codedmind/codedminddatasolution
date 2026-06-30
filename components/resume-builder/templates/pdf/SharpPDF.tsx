@@ -1,6 +1,6 @@
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import type { ResumeData } from "@/lib/resume/types";
-import { formatDate, PDFBullets, getPDFFonts } from "./shared";
+import { formatDate, PDFBullets, getPDFFonts, renderPDFCustomSection } from "./shared";
 
 interface Props { data: ResumeData; color: string; fontFamily?: string; }
 
@@ -173,7 +173,7 @@ export default function SharpPDF({ data, color, fontFamily }: Props) {
           {p.linkedin && <Text style={[s.contactText, { color }]}>{p.linkedin}</Text>}
         </View>
         <View style={s.divider} />
-        {sectionOrder.map(k => sections[k] ?? null)}
+        {sectionOrder.map(k => sections[k] ?? renderPDFCustomSection(data, k, color, f))}
       </Page>
     </Document>
   );

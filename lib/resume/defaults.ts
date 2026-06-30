@@ -21,6 +21,7 @@ export function emptyResume(): ResumeData {
     certifications: [],
     projects: [],
     languages: [],
+    customSections: [],
     sectionOrder: ["summary", "experience", "education", "skills", "certifications", "projects", "languages"],
   };
 }
@@ -104,6 +105,7 @@ export function sampleResume(): ResumeData {
       { id: uuid(), name: "English", level: "Native" },
       { id: uuid(), name: "Spanish", level: "Intermediate" },
     ],
+    customSections: [],
     sectionOrder: ["summary", "experience", "education", "skills", "certifications", "projects", "languages"],
   };
 }

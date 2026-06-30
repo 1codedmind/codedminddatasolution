@@ -1,4 +1,5 @@
 import type { ResumeData } from "@/lib/resume/types";
+import { renderCustomSection } from "@/lib/resume/customSectionHelper";
 
 interface Props { data: ResumeData; color: string; fontFamily?: string; }
 
@@ -168,7 +169,7 @@ export default function CascadePreview({ data, color, fontFamily }: Props) {
 
       {/* Main content */}
       <div style={{ flex: 1, padding: "32px 28px", overflow: "hidden" }}>
-        {mainOrder.map(k => mainMap[k] ?? null)}
+        {mainOrder.map(k => mainMap[k] ?? renderCustomSection(data, k, color, fontFamily))}
       </div>
     </div>
   );

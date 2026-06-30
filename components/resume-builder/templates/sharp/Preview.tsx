@@ -1,4 +1,5 @@
 import type { ResumeData } from "@/lib/resume/types";
+import { renderCustomSection } from "@/lib/resume/customSectionHelper";
 
 interface Props { data: ResumeData; color: string; fontFamily?: string; }
 
@@ -149,7 +150,7 @@ export default function SharpPreview({ data, color, fontFamily }: Props) {
           {p.website && <span style={{ color }}>{p.website}</span>}
         </div>
       </div>
-      {sectionOrder.map(k => sectionMap[k] ?? null)}
+      {sectionOrder.map(k => sectionMap[k] ?? renderCustomSection(data, k, color, fontFamily))}
     </div>
   );
 }

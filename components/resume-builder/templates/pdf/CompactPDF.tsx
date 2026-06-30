@@ -1,6 +1,6 @@
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import type { ResumeData } from "@/lib/resume/types";
-import { formatDate, PDFBullets, getPDFFonts } from "./shared";
+import { formatDate, PDFBullets, getPDFFonts, renderPDFCustomSection } from "./shared";
 
 interface Props { data: ResumeData; color: string; fontFamily?: string; }
 
@@ -88,7 +88,7 @@ export default function CompactPDF({ data, color, fontFamily }: Props) {
         ))}
       </View>
     );
-    return null;
+    return renderPDFCustomSection(data, key, color, f) ?? null;
   }
 
   function renderRight(key: string) {

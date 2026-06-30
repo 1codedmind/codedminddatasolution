@@ -1,4 +1,5 @@
 import type { ResumeData } from "@/lib/resume/types";
+import { renderCustomSection } from "@/lib/resume/customSectionHelper";
 
 interface Props { data: ResumeData; color: string; fontFamily?: string; }
 
@@ -83,7 +84,7 @@ export default function CompactPreview({ data, color, fontFamily }: Props) {
         ))}
       </div>
     );
-    return null;
+    return renderCustomSection(data, key, color, fontFamily) ?? null;
   }
 
   function renderRight(key: string) {

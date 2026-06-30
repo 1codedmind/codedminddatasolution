@@ -1,4 +1,5 @@
 import type { ResumeData } from "@/lib/resume/types";
+import { renderCustomSection } from "@/lib/resume/customSectionHelper";
 
 interface Props { data: ResumeData; color: string; fontFamily?: string; }
 
@@ -159,7 +160,7 @@ export default function CubicPreview({ data, color, fontFamily }: Props) {
       <div style={{ display: "flex" }}>
         {/* Main */}
         <div style={{ flex: 1, padding: "24px 28px" }}>
-          {mainOrder.map(k => mainMap[k] ?? null)}
+          {mainOrder.map(k => mainMap[k] ?? renderCustomSection(data, k, color, fontFamily))}
         </div>
         {/* Right sidebar */}
         <div style={{ width: 185, flexShrink: 0, background: "#F9FAFB", padding: "24px 18px", borderLeft: "1px solid #E5E7EB" }}>

@@ -1,4 +1,5 @@
 import type { ResumeData } from "@/lib/resume/types";
+import { renderCustomSection } from "@/lib/resume/customSectionHelper";
 
 interface Props {
   data: ResumeData;
@@ -128,7 +129,7 @@ export default function ClassicPreview({ data, color, fontFamily }: Props) {
         </div>
       </div>
 
-      {sectionOrder.map((key) => sectionMap[key] ?? null)}
+      {sectionOrder.map((key) => sectionMap[key] ?? renderCustomSection(data, key, color, fontFamily))}
     </div>
   );
 }

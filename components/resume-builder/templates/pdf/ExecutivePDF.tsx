@@ -1,11 +1,12 @@
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import type { ResumeData } from "@/lib/resume/types";
-import { formatDate, PDFBullets } from "./shared";
+import { formatDate, PDFBullets, renderPDFCustomSection } from "./shared";
 
 interface Props { data: ResumeData; color: string; }
 
 export default function ExecutivePDF({ data, color }: Props) {
   const { personalInfo: p, summary, experience, education, skills, certifications, languages, projects, sectionOrder } = data;
+  const fonts = { regular: "Helvetica", bold: "Helvetica-Bold", italic: "Helvetica-Oblique", boldItalic: "Helvetica-BoldOblique" };
 
   const sidebarBg = color;
 
@@ -153,7 +154,7 @@ export default function ExecutivePDF({ data, color }: Props) {
 
         {/* Main content */}
         <View style={s.main}>
-          {sectionOrder.map((key) => mainSections[key] ?? null)}
+          {sectionOrder.map((key) => mainSections[key] ?? renderPDFCustomSection(data, key, color, fonts))}
         </View>
       </Page>
     </Document>

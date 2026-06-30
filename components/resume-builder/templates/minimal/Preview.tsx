@@ -1,4 +1,5 @@
 import type { ResumeData } from "@/lib/resume/types";
+import { renderCustomSection } from "@/lib/resume/customSectionHelper";
 
 interface Props {
   data: ResumeData;
@@ -125,7 +126,7 @@ export default function MinimalPreview({ data, color, fontFamily }: Props) {
         <div style={{ height: 1, background: "#F3F4F6", marginTop: 16 }} />
       </div>
 
-      {sectionOrder.map((key) => sectionMap[key] ?? null)}
+      {sectionOrder.map((key) => sectionMap[key] ?? renderCustomSection(data, key, color, fontFamily))}
     </div>
   );
 }

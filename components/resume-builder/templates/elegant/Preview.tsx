@@ -1,4 +1,5 @@
 import type { ResumeData } from "@/lib/resume/types";
+import { renderCustomSection } from "@/lib/resume/customSectionHelper";
 
 interface Props { data: ResumeData; color: string; fontFamily?: string; }
 
@@ -153,7 +154,7 @@ export default function ElegantPreview({ data, color, fontFamily }: Props) {
           <div style={{ flex: 1, height: 1, background: "#E5E7EB" }} />
         </div>
       </div>
-      {sectionOrder.map(k => sectionMap[k] ?? null)}
+      {sectionOrder.map(k => sectionMap[k] ?? renderCustomSection(data, k, color, fontFamily))}
     </div>
   );
 }

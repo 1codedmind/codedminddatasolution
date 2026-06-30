@@ -1,6 +1,6 @@
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import type { ResumeData } from "@/lib/resume/types";
-import { formatDate, PDFBullets } from "./shared";
+import { formatDate, PDFBullets, renderPDFCustomSection } from "./shared";
 
 const s = StyleSheet.create({
   page: { backgroundColor: "#fff", paddingTop: 32, paddingBottom: 32, paddingLeft: 36, paddingRight: 36, fontFamily: "Helvetica", fontSize: 10 },
@@ -36,6 +36,7 @@ function SectionHead({ label, color }: { label: string; color: string }) {
 
 export default function ModernPDF({ data, color }: Props) {
   const { personalInfo: p, summary, experience, education, skills, certifications, projects, languages, sectionOrder } = data;
+  const fonts = { regular: "Helvetica", bold: "Helvetica-Bold", italic: "Helvetica-Oblique", boldItalic: "Helvetica-BoldOblique" };
 
   const sections: Record<string, React.ReactNode> = {
     summary: summary ? (
@@ -140,7 +141,7 @@ export default function ModernPDF({ data, color }: Props) {
             {p.website ? <Text style={[s.contactText, { color }]}>{p.website}</Text> : null}
           </View>
         </View>
-        {sectionOrder.map((key) => sections[key] ?? null)}
+        {sectionOrder.map((key) => sections[key] ?? renderPDFCustomSection(data, key, color, fonts))}
       </Page>
     </Document>
   );

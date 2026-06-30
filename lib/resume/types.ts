@@ -95,6 +95,21 @@ export interface Language {
   level: string; // "Native" | "Fluent" | "Advanced" | "Intermediate" | "Basic"
 }
 
+export interface CustomSectionItem {
+  id: string;
+  heading: string;
+  subtitle: string;
+  date: string;
+  description: string;
+  bullets: string[];
+}
+
+export interface CustomSection {
+  id: string;
+  title: string;
+  items: CustomSectionItem[];
+}
+
 export interface ResumeData {
   personalInfo: PersonalInfo;
   summary: string;
@@ -104,7 +119,8 @@ export interface ResumeData {
   certifications: Certification[];
   projects: Project[];
   languages: Language[];
-  sectionOrder: SectionName[];
+  customSections: CustomSection[];
+  sectionOrder: string[];
 }
 
 export interface ResumeConfig {
