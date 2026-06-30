@@ -81,9 +81,11 @@ export default function RootLayout({
           <Suspense fallback={<Navbar />}>
             <NavbarSession />
           </Suspense>
-          <SmoothScroll>
-            {children}
-          </SmoothScroll>
+          <Suspense fallback={null}>
+            <SmoothScroll>
+              {children}
+            </SmoothScroll>
+          </Suspense>
           <Footer />
           <ChatWidget />
           <GoogleAnalytics />
