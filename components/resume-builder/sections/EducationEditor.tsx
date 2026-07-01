@@ -3,6 +3,7 @@
 import { useResumeStore } from "@/store/resumeStore";
 import { Plus, Trash2 } from "lucide-react";
 import type { Education } from "@/lib/resume/types";
+import MonthYearPicker from "../MonthYearPicker";
 
 const inputCls = "w-full px-3 py-2 text-[13px] bg-white border border-stone-200 rounded-lg text-stone-900 placeholder:text-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400 transition-all";
 const labelCls = "block text-[11px] font-semibold text-stone-400 mb-1.5 uppercase tracking-wider";
@@ -34,8 +35,8 @@ function EducationItem({ edu, index }: { edu: Education; index: number }) {
         <Field label="Field of Study" value={edu.field} onChange={(v) => updateEducation(edu.id, { field: v })} placeholder="Computer Science" />
         <Field label="Location" value={edu.location} onChange={(v) => updateEducation(edu.id, { location: v })} placeholder="Berkeley, CA" />
         <Field label="GPA" value={edu.gpa} onChange={(v) => updateEducation(edu.id, { gpa: v })} placeholder="3.8 (optional)" />
-        <Field label="Start Date" value={edu.startDate} onChange={(v) => updateEducation(edu.id, { startDate: v })} type="month" />
-        <Field label="End Date" value={edu.endDate} onChange={(v) => updateEducation(edu.id, { endDate: v })} type="month" />
+        <MonthYearPicker label="Start Date" value={edu.startDate} onChange={(v) => updateEducation(edu.id, { startDate: v })} />
+        <MonthYearPicker label="End Date" value={edu.endDate} onChange={(v) => updateEducation(edu.id, { endDate: v })} />
       </div>
     </div>
   );

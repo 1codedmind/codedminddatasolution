@@ -1,13 +1,8 @@
 import type { ResumeData } from "@/lib/resume/types";
 import { renderCustomSection } from "@/lib/resume/customSectionHelper";
+import { formatDate as fmt } from "@/lib/resume/dateUtils";
 
 interface Props { data: ResumeData; color: string; fontFamily?: string; }
-
-function fmt(d: string) {
-  if (!d) return "";
-  const [y, m] = d.split("-");
-  return ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][parseInt(m,10)-1] + " " + y;
-}
 
 function SectionHead({ label, color }: { label: string; color: string }) {
   return (

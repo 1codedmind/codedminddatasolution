@@ -1,17 +1,11 @@
 import type { ResumeData } from "@/lib/resume/types";
 import { renderCustomSection } from "@/lib/resume/customSectionHelper";
+import { formatDate } from "@/lib/resume/dateUtils";
 
 interface Props {
   data: ResumeData;
   color: string;
   fontFamily?: string;
-}
-
-function formatDate(d: string): string {
-  if (!d) return "";
-  const [year, month] = d.split("-");
-  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  return `${months[parseInt(month, 10) - 1]} ${year}`;
 }
 
 function SideSection({ label, children }: { label: string; children: React.ReactNode }) {

@@ -46,38 +46,42 @@ export default function ResumePreview() {
   const [pageCount, setPageCount] = useState(1);
   const measureRef = useRef<HTMLDivElement>(null);
 
+  // Load ALL Google Fonts on mount so switching fonts is instant with no fallback flash.
   useEffect(() => {
-    if (!fontOption?.google) return;
-    const id = `gfont-${config.fontFamily}`;
-    if (document.getElementById(id)) return;
-    const link = document.createElement("link");
-    link.id = id;
-    link.rel = "stylesheet";
-    link.href = `https://fonts.googleapis.com/css2?family=${fontOption.google}&display=swap`;
-    document.head.appendChild(link);
-  }, [config.fontFamily, fontOption?.google]);
+    Object.values(FONT_OPTIONS).forEach((opt) => {
+      if (!opt.google) return;
+      const id = `gfont-preload-${opt.google}`;
+      if (document.getElementById(id)) return;
+      const link = document.createElement("link");
+      link.id = id;
+      link.rel = "stylesheet";
+      link.href = `https://fonts.googleapis.com/css2?family=${opt.google}&display=swap`;
+      document.head.appendChild(link);
+    });
+  }, []);
 
-  // Measure total content height via a hidden full render, then derive page count.
-  // ResizeObserver re-runs whenever the template content reflows.
+  // Measure total content height at the current fontScale.
+  // fontScale zoom is applied to the content wrapper inside the measurement div,
+  // so getBoundingClientRect returns naturalHeight * fontScale layout pixels.
+  // Page count = ceil(scaledHeight / A4_HEIGHT).
   useEffect(() => {
     const el = measureRef.current;
     if (!el) return;
     const ro = new ResizeObserver(() => {
-      // getBoundingClientRect gives layout pixels; one A4 page = A4_HEIGHT * fontScale layout px
       const h = el.getBoundingClientRect().height;
-      setPageCount(Math.max(1, Math.ceil(h / (A4_HEIGHT * fontScale))));
+      setPageCount(Math.max(1, Math.ceil(h / A4_HEIGHT)));
     });
     ro.observe(el);
     return () => ro.disconnect();
-  }, [fontScale]);
+  }, []);
 
   return (
     <div className="flex-1 overflow-auto bg-[#1c1c1e] flex flex-col items-center py-10 px-6 gap-8">
 
       {/*
-        Hidden measurement render (position:fixed so it never affects layout).
-        Renders the full template at fontScale zoom so getBoundingClientRect
-        returns the actual scaled height we need for page counting.
+        Hidden measurement render — off-screen, never affects layout.
+        Content wrapper has zoom: fontScale so the measured height already
+        reflects the scaled content, matching what each page card clips.
       */}
       <div
         ref={measureRef}
@@ -87,12 +91,13 @@ export default function ResumePreview() {
           top: -9999,
           left: -9999,
           width: A4_WIDTH,
-          zoom: fontScale,
           pointerEvents: "none",
           visibility: "hidden",
         }}
       >
-        <Template data={data} color={config.accentColor} fontFamily={fontOption?.css} />
+        <div style={{ zoom: fontScale }}>
+          <Template data={data} color={config.accentColor} fontFamily={fontOption?.css} />
+        </div>
       </div>
 
       {/* One card per PDF page */}
@@ -103,15 +108,16 @@ export default function ResumePreview() {
           </p>
 
           {/*
-            Outer shell: layout pixels, provides shadow + rounded corners.
-            Inner shell: zoomed coordinate space, clips to exactly one A4 page.
-            Content: shifted up by pageIndex * A4_HEIGHT (template pixels) so
-            only the slice for this page is visible through the clipping window.
+            Page card is always fixed A4 dimensions — the card never resizes.
+            fontScale zoom is applied to the content wrapper inside so only
+            the text/spacing scales, not the page itself.
+            Negative marginTop on the content wrapper slides the full template
+            up to reveal the correct page slice through the overflow:hidden window.
           */}
           <div
             style={{
-              width: A4_WIDTH * fontScale,
-              height: A4_HEIGHT * fontScale,
+              width: A4_WIDTH,
+              height: A4_HEIGHT,
               borderRadius: 2,
               overflow: "hidden",
               flexShrink: 0,
@@ -119,20 +125,15 @@ export default function ResumePreview() {
             }}
             className="bg-white"
           >
-            <div
-              style={{
-                zoom: fontScale,
-                width: A4_WIDTH,
-                height: A4_HEIGHT,
-                overflow: "hidden",
-              }}
-            >
+            <div style={{ overflow: "hidden", width: A4_WIDTH, height: A4_HEIGHT }}>
               <div style={{ marginTop: pageIndex === 0 ? 0 : -(pageIndex * A4_HEIGHT) }}>
-                <Template
-                  data={data}
-                  color={config.accentColor}
-                  fontFamily={fontOption?.css}
-                />
+                <div style={{ zoom: fontScale }}>
+                  <Template
+                    data={data}
+                    color={config.accentColor}
+                    fontFamily={fontOption?.css}
+                  />
+                </div>
               </div>
             </div>
           </div>

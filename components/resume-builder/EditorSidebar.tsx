@@ -371,13 +371,14 @@ function SortableSectionRow({ id }: { id: string }) {
       <div className={`group relative flex items-center transition-colors ${isOpen ? "bg-stone-50" : "hover:bg-stone-50"}`}>
         {isOpen && <span className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full bg-stone-900 z-10" />}
 
-        {/* Drag handle */}
+        {/* Drag handle — always visible, clear affordance */}
         <button
           {...listeners}
           tabIndex={-1}
-          className="shrink-0 pl-3 pr-1.5 py-3.5 cursor-grab active:cursor-grabbing touch-none text-stone-200 hover:text-stone-400 transition-colors"
+          title="Drag to reorder"
+          className="shrink-0 pl-2.5 pr-1 py-3 cursor-grab active:cursor-grabbing touch-none text-stone-400 hover:text-stone-600 transition-colors"
         >
-          <GripVertical size={12} />
+          <GripVertical size={15} />
         </button>
 
         {/* Section toggle */}
@@ -396,6 +397,11 @@ function SortableSectionRow({ id }: { id: string }) {
           {count !== null && count > 0 && (
             <span className="text-[10px] font-bold text-stone-400 bg-stone-100 rounded-full px-2 py-0.5 min-w-[20px] text-center shrink-0">
               {count}
+            </span>
+          )}
+          {count === 0 && (
+            <span className="text-[10px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 shrink-0">
+              Empty
             </span>
           )}
           <ChevronRight size={14} className={`text-stone-300 transition-transform duration-200 shrink-0 ${isOpen ? "rotate-90" : ""}`} />
@@ -696,7 +702,7 @@ export default function EditorSidebar() {
               />
               <span className="text-[13px] text-stone-400 font-medium w-5 shrink-0 text-right">A</span>
             </div>
-            <p className="text-[10px] text-stone-300 mt-1.5">Scales preview text · PDF uses default sizes</p>
+            <p className="text-[10px] text-stone-300 mt-1.5">Scales text size · page dimensions stay fixed</p>
           </div>
 
           {/* Font family */}

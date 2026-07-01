@@ -30,6 +30,7 @@ Rules:
 - "bullets" are the individual responsibility or achievement lines for that role, cleaned of leading bullet characters.
 - Split skills into individual items, no duplicates.
 - If a field is unknown or absent, use "" for strings and [] for arrays — never omit a key.
+- NEVER output the words "undefined", "null", "N/A", "none", or any placeholder — use "" instead.
 - Output raw JSON only, nothing before or after it.`;
 
 interface CFChoicesResponse {

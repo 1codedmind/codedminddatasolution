@@ -3,6 +3,7 @@
 import { useResumeStore } from "@/store/resumeStore";
 import { Plus, Trash2 } from "lucide-react";
 import type { Experience } from "@/lib/resume/types";
+import MonthYearPicker from "../MonthYearPicker";
 
 const inputCls = "w-full px-3 py-2 text-[13px] bg-white border border-stone-200 rounded-lg text-stone-900 placeholder:text-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400 transition-all";
 const labelCls = "block text-[11px] font-semibold text-stone-400 mb-1.5 uppercase tracking-wider";
@@ -45,9 +46,9 @@ function ExperienceItem({ exp, index }: { exp: Experience; index: number }) {
         <Field label="Location" value={exp.location} onChange={(v) => updateExperience(exp.id, { location: v })} placeholder="San Francisco, CA" />
 
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Start Date" value={exp.startDate} onChange={(v) => updateExperience(exp.id, { startDate: v })} type="month" />
+          <MonthYearPicker label="Start Date" value={exp.startDate} onChange={(v) => updateExperience(exp.id, { startDate: v })} />
           {!exp.current && (
-            <Field label="End Date" value={exp.endDate} onChange={(v) => updateExperience(exp.id, { endDate: v })} type="month" />
+            <MonthYearPicker label="End Date" value={exp.endDate} onChange={(v) => updateExperience(exp.id, { endDate: v })} />
           )}
         </div>
 

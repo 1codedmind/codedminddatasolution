@@ -2,6 +2,7 @@
 
 import { useResumeStore } from "@/store/resumeStore";
 import { Plus, Trash2 } from "lucide-react";
+import MonthYearPicker from "../MonthYearPicker";
 
 const inputCls = "w-full px-3 py-2 text-[13px] bg-white border border-stone-200 rounded-lg text-stone-900 placeholder:text-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400 transition-all";
 const labelCls = "block text-[11px] font-semibold text-stone-400 mb-1.5 uppercase tracking-wider";
@@ -30,10 +31,7 @@ export default function CertificationsEditor() {
               <label className={labelCls}>Issuing Organization</label>
               <input value={c.issuer} onChange={(e) => updateCertification(c.id, { issuer: e.target.value })} placeholder="Amazon Web Services" className={inputCls} />
             </div>
-            <div>
-              <label className={labelCls}>Date Issued</label>
-              <input type="month" value={c.date} onChange={(e) => updateCertification(c.id, { date: e.target.value })} className={inputCls} />
-            </div>
+            <MonthYearPicker label="Date Issued" value={c.date} onChange={(v) => updateCertification(c.id, { date: v })} />
             <div className="col-span-2">
               <label className={labelCls}>Credential URL (optional)</label>
               <input value={c.url} onChange={(e) => updateCertification(c.id, { url: e.target.value })} placeholder="https://..." className={inputCls} />

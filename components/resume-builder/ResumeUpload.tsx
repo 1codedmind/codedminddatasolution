@@ -176,16 +176,31 @@ export default function ResumeUpload() {
 
   function applyExtractedData() {
     if (!extractedData) return;
+
+    // LLMs sometimes return "undefined", "null", "N/A" etc. as literal strings.
+    // Strip them so they don't render in the template.
+    const JUNK = new Set(["undefined", "null", "n/a", "none", "-", "—", "--", "na"]);
+    function clean(v?: string | null): string {
+      if (!v || typeof v !== "string") return "";
+      const s = v.trim();
+      return JUNK.has(s.toLowerCase()) ? "" : s;
+    }
+    // Dates: additionally strip "Present"/"Current" — the `current` boolean handles that
+    function cleanDate(v?: string | null): string {
+      const s = clean(v);
+      return s.toLowerCase() === "present" || s.toLowerCase() === "current" ? "" : s;
+    }
+
     updatePersonalInfo({
-      fullName: extractedData.personalInfo.fullName || "",
-      jobTitle: extractedData.personalInfo.jobTitle || "",
-      email: extractedData.personalInfo.email || "",
-      phone: extractedData.personalInfo.phone || "",
-      location: extractedData.personalInfo.location || "",
-      linkedin: extractedData.personalInfo.linkedin || "",
-      website: extractedData.personalInfo.website || "",
+      fullName: clean(extractedData.personalInfo.fullName),
+      jobTitle: clean(extractedData.personalInfo.jobTitle),
+      email: clean(extractedData.personalInfo.email),
+      phone: clean(extractedData.personalInfo.phone),
+      location: clean(extractedData.personalInfo.location),
+      linkedin: clean(extractedData.personalInfo.linkedin),
+      website: clean(extractedData.personalInfo.website),
     });
-    if (extractedData.summary) updateSummary(extractedData.summary);
+    if (extractedData.summary) updateSummary(clean(extractedData.summary));
 
     data.experience.forEach((e) => removeExperience(e.id));
     extractedData.experience.forEach((exp) => {
@@ -193,7 +208,14 @@ export default function ResumeUpload() {
       const s = useResumeStore.getState();
       const newExp = s.data.experience[s.data.experience.length - 1];
       if (!newExp) return;
-      updateExperience(newExp.id, { title: exp.title || "", company: exp.company || "", location: exp.location || "", startDate: exp.startDate || "", endDate: exp.endDate || "", current: exp.current ?? false });
+      updateExperience(newExp.id, {
+        title: clean(exp.title),
+        company: clean(exp.company),
+        location: clean(exp.location),
+        startDate: cleanDate(exp.startDate),
+        endDate: cleanDate(exp.endDate),
+        current: exp.current ?? false,
+      });
       (exp.bullets ?? []).map((b) => b.trim()).filter(Boolean).forEach((bullet, idx) => {
         addExperienceBullet(newExp.id);
         updateExperienceBullet(newExp.id, idx, bullet);
@@ -206,34 +228,43 @@ export default function ResumeUpload() {
       const s = useResumeStore.getState();
       const newEdu = s.data.education[s.data.education.length - 1];
       if (!newEdu) return;
-      updateEducation(newEdu.id, { institution: edu.institution || "", degree: edu.degree || "", field: edu.field || "", location: edu.location || "", startDate: edu.startDate || "", endDate: edu.endDate || "", gpa: edu.gpa || "" });
+      updateEducation(newEdu.id, {
+        institution: clean(edu.institution),
+        degree: clean(edu.degree),
+        field: clean(edu.field),
+        location: clean(edu.location),
+        startDate: cleanDate(edu.startDate),
+        endDate: cleanDate(edu.endDate),
+        gpa: clean(edu.gpa),
+      });
     });
 
     data.skills.forEach((s) => removeSkill(s.id));
     extractedData.skills.forEach((skill) => {
-      if (!skill.trim()) return;
+      const s = clean(skill);
+      if (!s) return;
       addSkill();
-      const s = useResumeStore.getState();
-      const newSkill = s.data.skills[s.data.skills.length - 1];
-      if (newSkill) updateSkill(newSkill.id, { name: skill.trim(), level: 4 });
+      const st = useResumeStore.getState();
+      const newSkill = st.data.skills[st.data.skills.length - 1];
+      if (newSkill) updateSkill(newSkill.id, { name: s, level: 4 });
     });
 
     data.certifications.forEach((c) => removeCertification(c.id));
     extractedData.certifications.forEach((cert) => {
-      if (!cert.name?.trim()) return;
+      if (!clean(cert.name)) return;
       addCertification();
       const s = useResumeStore.getState();
       const newCert = s.data.certifications[s.data.certifications.length - 1];
-      if (newCert) updateCertification(newCert.id, { name: cert.name.trim(), issuer: cert.issuer || "", date: cert.date || "" });
+      if (newCert) updateCertification(newCert.id, { name: clean(cert.name), issuer: clean(cert.issuer), date: cleanDate(cert.date) });
     });
 
     data.languages.forEach((l) => removeLanguage(l.id));
     extractedData.languages.forEach((lang) => {
-      if (!lang.name?.trim()) return;
+      if (!clean(lang.name)) return;
       addLanguage();
       const s = useResumeStore.getState();
       const newLang = s.data.languages[s.data.languages.length - 1];
-      if (newLang) updateLanguage(newLang.id, { name: lang.name.trim(), level: lang.level || "Fluent" });
+      if (newLang) updateLanguage(newLang.id, { name: clean(lang.name), level: clean(lang.level) || "Fluent" });
     });
 
     setExtractedData(null);

@@ -1,13 +1,6 @@
 import { StyleSheet, Text, View } from "@react-pdf/renderer";
 import type { ResumeData } from "@/lib/resume/types";
-
-export function formatDate(d: string): string {
-  if (!d) return "";
-  const [year, month] = d.split("-");
-  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  const m = parseInt(month, 10) - 1;
-  return `${months[m] ?? ""} ${year}`;
-}
+export { formatDate } from "@/lib/resume/dateUtils";
 
 export const baseStyles = StyleSheet.create({
   page: { backgroundColor: "#ffffff", fontSize: 10 },
