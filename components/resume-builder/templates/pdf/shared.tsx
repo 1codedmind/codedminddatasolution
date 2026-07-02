@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from "@react-pdf/renderer";
 import type { ResumeData } from "@/lib/resume/types";
 export { formatDate } from "@/lib/resume/dateUtils";
+import { formatDate } from "@/lib/resume/dateUtils";
 
 export const baseStyles = StyleSheet.create({
   page: { backgroundColor: "#ffffff", fontSize: 10 },
