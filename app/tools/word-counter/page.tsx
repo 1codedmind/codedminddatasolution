@@ -3,9 +3,9 @@ import { Suspense } from "react";
 import WordCounterTool from "./WordCounterTool";
 
 export const metadata: Metadata = {
-  title: "Free Online Word Counter — Words, Characters, Readability & Keyword Density",
+  title: "Free Online Word Counter — Words, Characters, Readability, Platform Limits & More",
   description:
-    "Count words, characters, sentences, paragraphs, reading time, speaking time, and page count instantly. See keyword density and Flesch-Kincaid readability score. Free, no login, works in your browser.",
+    "Count words, characters, sentences, lines, and reading time instantly. Check platform limits for Twitter, SMS, Instagram, and SEO. Find & replace, sort lines, keyword density, Flesch-Kincaid readability and grade level. Free, no login.",
   alternates: { canonical: "https://codedmind.co.in/tools/word-counter" },
   openGraph: {
     title: "Free Online Word Counter",
@@ -71,7 +71,31 @@ const faqSchema = {
       name: "How do the text transformation tools work?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "The toolbar above the text box lets you convert your text to UPPERCASE, lowercase, Title Case, or Sentence case with one click. You can also remove extra spaces and copy the result.",
+        text: "The toolbar lets you convert text to UPPERCASE, lowercase, Title Case, or Sentence case. You can also sort lines A–Z or Z–A, remove empty lines, remove duplicate lines, and reverse words — all with one click.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "What are the platform character limits?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "The Platform Limits section shows how your text measures against Twitter/X (280 chars), SMS (160), Instagram bio (150), YouTube title (100), SEO title tag (60), email subject (78), meta description (155), and LinkedIn post (3000). Bars turn amber when approaching the limit and red when over.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "How does Find & Replace work?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Click Find & Replace in the toolbar to open the panel. Enter the word or phrase to find, optionally a replacement, then click Replace first (one at a time) or Replace all. A match count shows how many occurrences were found.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "What is the Reading Grade level?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Reading Grade uses the Flesch-Kincaid Grade Level formula to estimate the US school grade level needed to easily understand your text. Grade 5–6 is elementary, 9–12 is high school, and 13+ is college level.",
       },
     },
   ],
@@ -124,7 +148,19 @@ export default function WordCounterPage() {
           </div>
           <div>
             <p className="font-semibold text-stone-700">What do the text transformation tools do?</p>
-            <p className="mt-1">The toolbar lets you convert your text to UPPERCASE, lowercase, Title Case, or Sentence case instantly. You can also strip extra spaces and copy the result.</p>
+            <p className="mt-1">The toolbar lets you convert to UPPERCASE, lowercase, Title Case, or Sentence case. You can also sort lines A–Z or Z–A, remove empty or duplicate lines, and reverse word order.</p>
+          </div>
+          <div>
+            <p className="font-semibold text-stone-700">What are the platform character limits?</p>
+            <p className="mt-1">Click "Platform character limits" to expand a panel showing how your text fits within Twitter/X (280), SMS (160), Instagram bio (150), YouTube title (100), SEO title (60), meta description (155), and LinkedIn post (3,000). Bars turn amber near the limit and red when exceeded.</p>
+          </div>
+          <div>
+            <p className="font-semibold text-stone-700">How does Find &amp; Replace work?</p>
+            <p className="mt-1">Click "Find &amp; Replace" in the toolbar to reveal the panel. Type a search term to see match count, add a replacement, then hit Replace first or Replace all. Toggle Match case for exact-case matching.</p>
+          </div>
+          <div>
+            <p className="font-semibold text-stone-700">What is the Reading Grade?</p>
+            <p className="mt-1">Reading Grade uses the Flesch-Kincaid Grade Level formula — it estimates the US school grade level a reader needs to understand your text easily. Grade 5–6 is elementary, 9–12 high school, 13+ college.</p>
           </div>
         </div>
       </section>
