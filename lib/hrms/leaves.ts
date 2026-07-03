@@ -126,6 +126,42 @@ export async function getLeaveRequest(id: string): Promise<LeaveRequest | null> 
   return rows[0] ?? null;
 }
 
+export type LeaveBalance = {
+  leaveTypeId: string;
+  allocated: number | null; // null = unlimited
+  used: number;             // approved + pending days this calendar year
+  available: number | null; // null = unlimited
+};
+
+/** Balance per leave type for one member in the current calendar year.
+ *  Pending requests count against the balance so people can't over-book while awaiting review. */
+export async function getLeaveBalances(memberId: string): Promise<LeaveBalance[]> {
+  await ensureHrmsTables();
+  const sql = getSql();
+  const year = new Date().getFullYear();
+  const rows = await sql<{ leaveTypeId: string; daysPerYear: number | null; used: string }[]>`
+    SELECT
+      lt.id AS "leaveTypeId",
+      lt.days_per_year AS "daysPerYear",
+      COALESCE(SUM(lr.days_count) FILTER (
+        WHERE lr.status IN ('approved', 'pending')
+          AND EXTRACT(YEAR FROM lr.from_date::date) = ${year}
+      ), 0) AS used
+    FROM leave_types lt
+    LEFT JOIN leave_requests lr ON lr.leave_type_id = lt.id AND lr.member_id = ${memberId}
+    GROUP BY lt.id, lt.days_per_year
+  `;
+  return rows.map((r) => {
+    const used = Number(r.used);
+    return {
+      leaveTypeId: r.leaveTypeId,
+      allocated: r.daysPerYear,
+      used,
+      available: r.daysPerYear === null ? null : Math.max(0, r.daysPerYear - used),
+    };
+  });
+}
+
 export async function createLeaveRequest(input: {
   memberId: string;
   leaveTypeId: string;

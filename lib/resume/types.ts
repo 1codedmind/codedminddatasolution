@@ -4,16 +4,15 @@ export type TemplateName =
   | "cascade" | "cubic" | "nanica" | "enfold";
 
 export type FontOption =
-  | "inter" | "roboto" | "montserrat" | "opensans" | "lato" | "nunito" | "raleway"
+  | "inter" | "roboto" | "poppins" | "montserrat" | "nunito" | "raleway"
   | "georgia" | "merriweather" | "playfair" | "garamond";
 
 export const FONT_OPTIONS: Record<FontOption, { label: string; css: string; serif: boolean; google?: string }> = {
-  // ── Sans-serif ─────────────────────────────────────────────────────────
+  // ── Sans-serif (each visually distinct) ────────────────────────────────
   inter:        { label: "Inter",            css: "'Inter', system-ui, sans-serif",                         serif: false, google: "Inter:wght@400;500;600;700;800" },
   roboto:       { label: "Roboto",           css: "'Roboto', Arial, sans-serif",                             serif: false, google: "Roboto:wght@300;400;500;700" },
+  poppins:      { label: "Poppins",          css: "'Poppins', Helvetica, sans-serif",                        serif: false, google: "Poppins:wght@400;500;600;700" },
   montserrat:   { label: "Montserrat",       css: "'Montserrat', Helvetica, sans-serif",                     serif: false, google: "Montserrat:wght@400;500;600;700;800" },
-  opensans:     { label: "Open Sans",        css: "'Open Sans', Arial, sans-serif",                          serif: false, google: "Open+Sans:wght@300;400;600;700" },
-  lato:         { label: "Lato",             css: "'Lato', Arial, sans-serif",                               serif: false, google: "Lato:wght@300;400;700" },
   nunito:       { label: "Nunito",           css: "'Nunito', system-ui, sans-serif",                         serif: false, google: "Nunito:wght@300;400;600;700;800" },
   raleway:      { label: "Raleway",          css: "'Raleway', Helvetica, sans-serif",                        serif: false, google: "Raleway:wght@400;500;600;700" },
   // ── Serif ──────────────────────────────────────────────────────────────

@@ -1,5 +1,5 @@
 export const AUTH_COOKIE_NAME = "codedmind_candidate_session";
-export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7;
+export const SESSION_TTL_SECONDS = 60 * 60 * 24; // 1 day — users must sign in again after 24h
 
 export const PASSWORD_LIMITS = {
   min: 12,

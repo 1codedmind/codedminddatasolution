@@ -113,6 +113,13 @@ export async function POST(request: NextRequest) {
   if (!text) {
     return NextResponse.json({ error: "Resume text is required." }, { status: 400 });
   }
+  // Hard reject oversized payloads instead of silently truncating — resumes are small
+  if (text.length > MAX_TEXT_LENGTH * 4) {
+    return NextResponse.json(
+      { error: "Resume text is too large. Upload a standard 1–2 page resume." },
+      { status: 413 },
+    );
+  }
 
   // ── 5. Cloudflare Workers AI extraction ──────────────────────────────────
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;

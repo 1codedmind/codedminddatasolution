@@ -52,7 +52,7 @@ export function ConsentProvider({ children }: { children: React.ReactNode }) {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 80, opacity: 0 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
-              className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-sm z-50"
+              className="fixed bottom-20 sm:bottom-4 left-4 right-4 sm:right-auto sm:left-6 sm:max-w-sm z-50"
             >
               <div className="bg-stone-900 border border-stone-700 rounded-2xl p-5 shadow-2xl">
                 <p className="text-sm text-white font-semibold mb-1">Cookie preferences</p>

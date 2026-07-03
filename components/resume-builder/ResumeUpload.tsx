@@ -43,9 +43,16 @@ interface ExtractedData {
 
 // ── PDF helpers ────────────────────────────────────────────────────────────
 
+// Upload limits — resumes are small documents; anything bigger is abuse or a mistake
+const MAX_PDF_MB = 5;
+const MAX_PDF_PAGES = 10;
+
 async function extractTextFromPDF(file: File): Promise<string> {
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  if (pdf.numPages > MAX_PDF_PAGES) {
+    throw new Error(`PDF has ${pdf.numPages} pages — maximum is ${MAX_PDF_PAGES}. Resumes are usually 1–2 pages.`);
+  }
   let text = "";
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
@@ -147,6 +154,10 @@ export default function ResumeUpload() {
   async function handleFileSelect(selectedFile: File | null) {
     if (!selectedFile) return;
     if (!selectedFile.type.includes("pdf")) { setError("Please upload a PDF file"); return; }
+    if (selectedFile.size > MAX_PDF_MB * 1024 * 1024) {
+      setError(`File is too large (${(selectedFile.size / 1024 / 1024).toFixed(1)} MB). Maximum is ${MAX_PDF_MB} MB.`);
+      return;
+    }
     setLoading(true);
     setError("");
     setUsedFallback(false);
@@ -167,7 +178,8 @@ export default function ResumeUpload() {
         setUsedFallback(true);
       }
     } catch (err) {
-      setError("Failed to read PDF. Please try another file.");
+      const msg = err instanceof Error && err.message.includes("pages") ? err.message : "Failed to read PDF. Please try another file.";
+      setError(msg);
       console.error(err);
     } finally {
       setLoading(false);

@@ -4,14 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Users, CalendarDays, Banknote, Clock,
-  TrendingUp, Monitor, Megaphone, CircleUser, ChevronLeft, Menu, Building2,
+  TrendingUp, Monitor, Megaphone, CircleUser, ChevronLeft, Menu, Building2, KeyRound,
 } from "lucide-react";
 import { useState } from "react";
 import type { HrmsPermission } from "@/lib/hrms/access";
 
 const ICONS: Record<string, React.ElementType> = {
   LayoutDashboard, Users, CalendarDays, Banknote, Clock,
-  TrendingUp, Monitor, Megaphone, CircleUser, Building2,
+  TrendingUp, Monitor, Megaphone, CircleUser, Building2, KeyRound,
 };
 
 type NavItem = {

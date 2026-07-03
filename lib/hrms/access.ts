@@ -88,4 +88,5 @@ export const HRMS_NAV: NavItem[] = [
   { label: "Performance",   href: "/hrms/performance",   icon: "TrendingUp" },
   { label: "Assets",        href: "/hrms/assets",        icon: "Monitor",         permission: "assets:read" },
   { label: "Announcements", href: "/hrms/announcements", icon: "Megaphone" },
+  { label: "Change Password", href: "/account/password",  icon: "KeyRound" },
 ];

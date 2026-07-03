@@ -19,6 +19,16 @@ const STARTERS = [
   "How do I merge PDF files?",
 ];
 
+// Normalize model output for display: markdown bullets → "•", strip bold/heading markers
+function formatAssistantText(text: string): string {
+  return text
+    .replace(/^[ \t]*[-*][ \t]+/gm, "• ")
+    .replace(/\*\*(.+?)\*\*/g, "$1")
+    .replace(/^#+[ \t]+/gm, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 function TypingDots() {
   return (
     <div className="flex items-center gap-1 px-4 py-3">
@@ -221,13 +231,13 @@ export default function ChatWidget() {
                   className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                 >
                   <div
-                    className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
+                    className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed whitespace-pre-wrap ${
                       msg.role === "user"
                         ? "bg-stone-950 text-white"
                         : "bg-white text-stone-800 border border-stone-200"
                     }`}
                   >
-                    {msg.text}
+                    {msg.role === "assistant" ? formatAssistantText(msg.text) : msg.text}
                     {streaming && msg.id.startsWith("a-") && msg.text && (
                       <span className="inline-block w-0.5 h-3.5 bg-stone-400 ml-0.5 animate-pulse align-middle" />
                     )}

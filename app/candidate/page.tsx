@@ -76,6 +76,12 @@ export default async function CandidatePage() {
                   Start Assessment
                   <ArrowRight size={16} />
                 </Link>
+                <Link
+                  href="/account/password"
+                  className="inline-flex items-center justify-center rounded-full border border-stone-300 bg-white px-5 py-2.5 text-sm font-semibold text-stone-700 transition hover:border-stone-400 hover:bg-stone-50"
+                >
+                  Change Password
+                </Link>
                 <LogoutButton />
               </div>
             </div>

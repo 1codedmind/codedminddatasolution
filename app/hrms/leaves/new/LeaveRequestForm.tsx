@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import type { LeaveType } from "@/lib/hrms/leaves";
+import type { LeaveType, LeaveBalance } from "@/lib/hrms/leaves";
 
-type Props = { leaveTypes: LeaveType[]; memberId: string };
+type Props = { leaveTypes: LeaveType[]; balances: LeaveBalance[]; memberId: string };
 
 function workingDays(from: string, to: string): number {
   if (!from || !to) return 0;
@@ -19,19 +19,34 @@ function workingDays(from: string, to: string): number {
   return count;
 }
 
-export default function LeaveRequestForm({ leaveTypes, memberId }: Props) {
+export default function LeaveRequestForm({ leaveTypes, balances, memberId }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState("");
   const [from, setFrom]       = useState("");
   const [to, setTo]           = useState("");
+  const [typeId, setTypeId]   = useState("");
 
   const days = workingDays(from, to);
+  const balance = balances.find((b) => b.leaveTypeId === typeId);
+  const available = balance?.available ?? null; // null = unlimited
+  const overBalance = typeId !== "" && available !== null && days > available;
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setLoading(true);
     setError("");
+
+    // Client-side balance guard — same rule the server enforces, but with instant feedback
+    if (overBalance) {
+      setError(
+        available === 0
+          ? "You have no days left for this leave type this year (pending requests also count). Pick a different leave type or contact HR."
+          : `You're requesting ${days} days but only ${available} ${available === 1 ? "day is" : "days are"} available. Shorten this request to ${available} day${available !== 1 ? "s" : ""}, or split the leave: apply for ${available} now and submit the remaining ${days - available} day${days - available !== 1 ? "s" : ""} as a separate request (or contact HR).`
+      );
+      return;
+    }
+
+    setLoading(true);
 
     const fd = new FormData(e.currentTarget);
     const body = {
@@ -67,14 +82,35 @@ export default function LeaveRequestForm({ leaveTypes, memberId }: Props) {
         <label className="block text-xs font-semibold text-stone-400 mb-1.5">
           Leave type <span className="text-red-500">*</span>
         </label>
-        <select name="leaveTypeId" required className={selectCls}>
+        <select
+          name="leaveTypeId"
+          required
+          value={typeId}
+          onChange={(e) => setTypeId(e.target.value)}
+          className={selectCls}
+        >
           <option value="">— Select type —</option>
-          {leaveTypes.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.name}{t.daysPerYear ? ` (${t.daysPerYear} days/year)` : ""}{!t.isPaid ? " · Unpaid" : ""}
-            </option>
-          ))}
+          {leaveTypes.map((t) => {
+            const b = balances.find((x) => x.leaveTypeId === t.id);
+            const tag =
+              b && b.available !== null
+                ? ` — ${b.available} of ${b.allocated} left`
+                : t.daysPerYear
+                  ? ` (${t.daysPerYear} days/year)`
+                  : "";
+            return (
+              <option key={t.id} value={t.id}>
+                {t.name}{tag}{!t.isPaid ? " · Unpaid" : ""}
+              </option>
+            );
+          })}
         </select>
+        {balance && balance.available !== null && (
+          <p className={`text-xs mt-1.5 ${balance.available === 0 ? "text-red-400" : "text-stone-500"}`}>
+            <span className="font-bold text-white">{balance.available}</span> of {balance.allocated} days
+            available this year · {balance.used} used or pending
+          </p>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -113,6 +149,21 @@ export default function LeaveRequestForm({ leaveTypes, memberId }: Props) {
         </p>
       )}
 
+      {/* Live over-balance warning — shown before submit so nothing fails silently */}
+      {overBalance && (
+        <div className="text-xs text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-xl px-4 py-3 leading-relaxed">
+          {available === 0 ? (
+            <>You have <span className="font-bold">no days left</span> for this leave type this year (pending requests count too).</>
+          ) : (
+            <>
+              This request is <span className="font-bold">{days - (available ?? 0)} day{days - (available ?? 0) !== 1 ? "s" : ""} over</span> your
+              available balance of <span className="font-bold">{available}</span>.
+              For longer leave, split it — apply for {available} day{available !== 1 ? "s" : ""} now and submit the rest separately, or contact HR.
+            </>
+          )}
+        </div>
+      )}
+
       <div>
         <label className="block text-xs font-semibold text-stone-400 mb-1.5">Reason (optional)</label>
         <textarea
@@ -132,7 +183,7 @@ export default function LeaveRequestForm({ leaveTypes, memberId }: Props) {
       <div className="flex gap-3">
         <button
           type="submit"
-          disabled={loading || days === 0}
+          disabled={loading || days === 0 || overBalance}
           className="flex-1 py-3 text-sm font-semibold text-white bg-[#C87660] rounded-xl hover:bg-[#b5644e] disabled:opacity-50 transition-colors"
         >
           {loading ? "Submitting…" : "Submit request"}

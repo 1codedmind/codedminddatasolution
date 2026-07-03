@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { hasPermission } from "@/lib/hrms/access";
-import { createLeaveRequest } from "@/lib/hrms/leaves";
+import { createLeaveRequest, getLeaveBalances } from "@/lib/hrms/leaves";
 import { hasDatabaseUrl } from "@/lib/db";
 import { enforceRateLimit } from "@/lib/auth/rate-limit";
 
@@ -39,6 +39,29 @@ export async function POST(req: NextRequest) {
 
   if (new Date(fromDate as string) > new Date(toDate as string)) {
     return NextResponse.json({ error: "From date must be before to date." }, { status: 400 });
+  }
+
+  const days = Number(daysCount);
+  if (!Number.isFinite(days) || days <= 0) {
+    return NextResponse.json({ error: "Day count must be a positive number." }, { status: 400 });
+  }
+
+  // Enforce leave balance — pending + approved days this year count against the allocation
+  const balances = await getLeaveBalances(requestedFor);
+  const balance = balances.find((b) => b.leaveTypeId === leaveTypeId);
+  if (balance && balance.available !== null && days > balance.available) {
+    return NextResponse.json(
+      {
+        error:
+          balance.available === 0
+            ? `You have no days left for this leave type this year (${balance.used}/${balance.allocated} used, including pending requests).`
+            : `Only ${balance.available} day${balance.available !== 1 ? "s" : ""} available for this leave type (${balance.used}/${balance.allocated} used, including pending requests). For longer leave, split it into a request of ${balance.available} day${balance.available !== 1 ? "s" : ""} now and a separate request for the rest, or contact HR.`,
+        code: "INSUFFICIENT_BALANCE",
+        available: balance.available,
+        requested: days,
+      },
+      { status: 422 },
+    );
   }
 
   const result = await createLeaveRequest({

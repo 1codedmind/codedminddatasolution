@@ -166,7 +166,16 @@ export default function AuthForm({ mode }: AuthFormProps) {
                     Use 12-72 characters with at least one uppercase letter, one
                     lowercase letter, one number, and one special character.
                   </p>
-                ) : null}
+                ) : (
+                  <p className="mt-2 text-right">
+                    <Link
+                      href="/forgot-password"
+                      className="text-xs font-semibold text-amber-700 hover:text-amber-800"
+                    >
+                      Forgot password?
+                    </Link>
+                  </p>
+                )}
               </div>
 
               {error ? (

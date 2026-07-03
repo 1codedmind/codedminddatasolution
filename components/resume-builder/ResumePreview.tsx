@@ -40,7 +40,8 @@ const PAGE_SHADOW =
 export default function ResumePreview() {
   const { data, config } = useResumeStore();
   const Template = TEMPLATES[config.template] ?? ModernPreview;
-  const fontOption = FONT_OPTIONS[config.fontFamily ?? "inter"];
+  // Fall back to inter for legacy stored keys that no longer exist (e.g. "opensans", "lato")
+  const fontOption = FONT_OPTIONS[config.fontFamily ?? "inter"] ?? FONT_OPTIONS.inter;
   const fontScale = config.fontScale ?? 1;
 
   const [pageCount, setPageCount] = useState(1);

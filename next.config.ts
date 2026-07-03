@@ -18,7 +18,8 @@ function buildContentSecurityPolicy() {
   return [
     "default-src 'self'",
     scriptSrc,
-    "style-src 'self' 'unsafe-inline'",
+    // cdn.jsdelivr.net: Monaco editor loads its CSS from the CDN
+    "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
     "img-src 'self' data: blob: https://www.google-analytics.com",
     "font-src 'self' https://fonts.gstatic.com",
     `connect-src 'self' https://fonts.googleapis.com https://cdn.jsdelivr.net ${vercelInsights} ${ga4Collect}`,
