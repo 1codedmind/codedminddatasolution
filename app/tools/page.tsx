@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Braces, Lock, Hash, AlignLeft, Clock, KeyRound, Globe, Files, Scissors, RotateCcw, FileImage, Minimize2, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Braces, Lock, Hash, AlignLeft, Clock, KeyRound, Globe, Files, Scissors, RotateCcw, FileImage, Minimize2, ArrowRight, CheckCircle2, PenLine } from "lucide-react";
 import { motion } from "framer-motion";
 import { fadeUp, container } from "@/lib/motion";
 
@@ -203,6 +203,7 @@ const pdfTools = [
   { href: "/tools/pdf/split",      icon: Scissors,  label: "Split PDF",    description: "Extract individual pages or custom page ranges." },
   { href: "/tools/pdf/rotate",     icon: RotateCcw, label: "Rotate PDF",   description: "Rotate all pages by 90°, 180°, or 270°." },
   { href: "/tools/pdf/jpg-to-pdf", icon: FileImage, label: "JPG to PDF",   description: "Convert JPG, PNG, or WebP images to a PDF document." },
+  { href: "/tools/pdf/sign",       icon: PenLine,   label: "Sign PDF",     description: "eSign a PDF — type, draw, or upload your signature.", badge: "New" },
   { href: "/tools/pdf/compress",   icon: Minimize2, label: "Compress PDF", description: "Reduce file size with server-side Ghostscript.", badge: "Soon" },
 ];
 

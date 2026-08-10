@@ -269,6 +269,7 @@ export type Lead = {
   name: string;
   email: string;
   company: string | null;
+  phone: string | null;
   message: string | null;
   source: string | null;
   status: LeadStatus;

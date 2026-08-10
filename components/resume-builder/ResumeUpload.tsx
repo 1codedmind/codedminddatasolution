@@ -3,10 +3,15 @@
 import { useEffect, useState, useRef } from "react";
 import { Upload, CheckCircle2, AlertCircle, Sparkles, Lock, Zap } from "lucide-react";
 import Link from "next/link";
-import * as pdfjsLib from "pdfjs-dist";
 import { useResumeStore } from "@/store/resumeStore";
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
+// pdfjs touches browser globals (DOMMatrix) at import time, so it must be
+// loaded lazily on the client — a static import breaks server rendering.
+async function getPdfjs() {
+  const pdfjs = await import("pdfjs-dist");
+  pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
+  return pdfjs;
+}
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -48,6 +53,7 @@ const MAX_PDF_MB = 5;
 const MAX_PDF_PAGES = 10;
 
 async function extractTextFromPDF(file: File): Promise<string> {
+  const pdfjsLib = await getPdfjs();
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
   if (pdf.numPages > MAX_PDF_PAGES) {

@@ -4,7 +4,7 @@ import Link from "next/link";
 import {
   Files, Scissors, FileImage,
   RotateCcw, Minimize2, Image,
-  Droplets, Hash, Lock, ArrowRight, ShieldCheck,
+  Droplets, Hash, Lock, ArrowRight, ShieldCheck, PenLine,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { fadeUp, container } from "@/lib/motion";
@@ -14,6 +14,7 @@ const TOOLS = [
   { href: "/tools/pdf/split",      icon: Scissors,  label: "Split PDF",    description: "Extract individual pages or custom ranges from a PDF.", ready: true               },
   { href: "/tools/pdf/rotate",     icon: RotateCcw, label: "Rotate PDF",   description: "Rotate all pages or specific pages by 90°, 180°, or 270°.", ready: true           },
   { href: "/tools/pdf/jpg-to-pdf", icon: FileImage, label: "JPG to PDF",   description: "Convert JPG, PNG, or WebP images into a PDF document.", ready: true              },
+  { href: "/tools/pdf/sign",       icon: PenLine,   label: "Sign PDF",     description: "eSign a PDF — type, draw, or upload your signature and place it anywhere.", ready: true, badge: "New" },
   { href: "/tools/pdf/compress",   icon: Minimize2, label: "Compress PDF", description: "Reduce file size significantly with server-side Ghostscript.", ready: false, badge: "Soon" },
   { href: "#",                     icon: Image,     label: "PDF to JPG",   description: "Convert each PDF page to a high-quality JPG image.",    ready: false, badge: "Soon" },
   { href: "#",                     icon: Droplets,  label: "Watermark PDF",description: "Add a custom text or image watermark to your PDF.",     ready: false, badge: "Soon" },

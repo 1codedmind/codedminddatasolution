@@ -66,6 +66,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Account not found." }, { status: 404 });
   }
 
+  // A social sign-in account has no current password to verify against. Send
+  // them through the reset flow to set one for the first time.
+  if (!user.passwordHash || !user.passwordSalt) {
+    return NextResponse.json(
+      {
+        error:
+          "This account signs in with Google and has no password yet. Use \"Forgot password?\" to set one.",
+      },
+      { status: 400 },
+    );
+  }
+
   if (!verifyPassword(currentPassword, user.passwordSalt, user.passwordHash)) {
     return NextResponse.json({ error: "Current password is incorrect." }, { status: 401 });
   }

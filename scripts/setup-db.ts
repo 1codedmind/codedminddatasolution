@@ -37,7 +37,25 @@ async function run() {
       password_hash TEXT NOT NULL,
       password_salt TEXT NOT NULL
     )`;
+  // Social sign-in accounts have no password. Relaxing these constraints does
+  // not touch existing rows — stored password hashes are unaffected.
+  await sql`ALTER TABLE IF EXISTS candidates ALTER COLUMN password_hash DROP NOT NULL`;
+  await sql`ALTER TABLE IF EXISTS candidates ALTER COLUMN password_salt DROP NOT NULL`;
   ok("candidates", "external job applicants / public auth");
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS candidate_identities (
+      provider          TEXT        NOT NULL,
+      provider_user_id  TEXT        NOT NULL,
+      candidate_id      TEXT        NOT NULL REFERENCES candidates(id) ON DELETE CASCADE,
+      email             TEXT        NOT NULL,
+      created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      PRIMARY KEY (provider, provider_user_id)
+    )`;
+  await sql`
+    CREATE INDEX IF NOT EXISTS idx_candidate_identities_candidate
+    ON candidate_identities (candidate_id)`;
+  ok("candidate_identities", "linked social logins (Google)");
 
   await sql`
     CREATE TABLE IF NOT EXISTS team_members (
@@ -55,15 +73,35 @@ async function run() {
   ok("team_members", "internal staff (superadmin/admin/employee)");
 
   await sql`
-    CREATE TABLE IF NOT EXISTS leads (
-      id         TEXT PRIMARY KEY,
-      name       TEXT NOT NULL,
-      email      TEXT NOT NULL,
-      company    TEXT,
-      message    TEXT,
-      source     TEXT,
-      created_at TEXT NOT NULL
+    CREATE TABLE IF NOT EXISTS team_member_identities (
+      provider          TEXT        NOT NULL,
+      provider_user_id  TEXT        NOT NULL,
+      team_member_id    TEXT        NOT NULL REFERENCES team_members(id) ON DELETE CASCADE,
+      email             TEXT        NOT NULL,
+      created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      PRIMARY KEY (provider, provider_user_id)
     )`;
+  await sql`
+    CREATE INDEX IF NOT EXISTS idx_team_member_identities_member
+    ON team_member_identities (team_member_id)`;
+  ok("team_member_identities", "staff social logins (Google)");
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS leads (
+      id          TEXT PRIMARY KEY,
+      name        TEXT NOT NULL,
+      email       TEXT NOT NULL,
+      company     TEXT,
+      phone       TEXT,
+      message     TEXT,
+      source      TEXT,
+      status      TEXT NOT NULL DEFAULT 'new',
+      assigned_to TEXT,
+      created_at  TEXT NOT NULL
+    )`;
+  await sql`ALTER TABLE leads ADD COLUMN IF NOT EXISTS phone TEXT`;
+  await sql`ALTER TABLE leads ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'new'`;
+  await sql`ALTER TABLE leads ADD COLUMN IF NOT EXISTS assigned_to TEXT`;
   ok("leads", "contact form submissions");
 
   await sql`

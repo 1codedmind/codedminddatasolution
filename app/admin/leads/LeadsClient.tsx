@@ -38,15 +38,17 @@ export default function LeadsClient({
         l.name.toLowerCase().includes(q) ||
         l.email.toLowerCase().includes(q) ||
         (l.company ?? "").toLowerCase().includes(q) ||
+        (l.phone ?? "").toLowerCase().includes(q) ||
         (l.message ?? "").toLowerCase().includes(q),
     );
   }, [leads, search]);
 
   function exportCSV() {
-    const headers = ["Name", "Email", "Company", "Message", "Source", "Date"];
+    const headers = ["Name", "Email", "Phone", "Company", "Message", "Source", "Date"];
     const rows = filtered.map((l) => [
       l.name,
       l.email,
+      l.phone ?? "",
       l.company ?? "",
       l.message ?? "",
       l.source ?? "",
@@ -95,7 +97,7 @@ export default function LeadsClient({
           <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-500" />
           <input
             type="text"
-            placeholder="Search by name, email, company…"
+            placeholder="Search by name, email, phone, company…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-3 bg-stone-900 border border-stone-800 rounded-xl text-sm text-white placeholder-stone-500 focus:outline-none focus:border-[#C87660] focus:ring-1 focus:ring-[#C87660] transition-colors"
@@ -110,6 +112,7 @@ export default function LeadsClient({
                 <tr className="border-b border-stone-800">
                   <th className="text-left px-5 py-3.5 text-xs font-semibold text-stone-500 uppercase tracking-widest">Name</th>
                   <th className="text-left px-5 py-3.5 text-xs font-semibold text-stone-500 uppercase tracking-widest">Email</th>
+                  <th className="text-left px-5 py-3.5 text-xs font-semibold text-stone-500 uppercase tracking-widest">Phone</th>
                   <th className="text-left px-5 py-3.5 text-xs font-semibold text-stone-500 uppercase tracking-widest">Company</th>
                   <th className="text-left px-5 py-3.5 text-xs font-semibold text-stone-500 uppercase tracking-widest">Message</th>
                   <th className="text-left px-5 py-3.5 text-xs font-semibold text-stone-500 uppercase tracking-widest">Source</th>
@@ -119,7 +122,7 @@ export default function LeadsClient({
               <tbody>
                 {filtered.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="text-center py-12 text-stone-600 text-sm">
+                    <td colSpan={7} className="text-center py-12 text-stone-600 text-sm">
                       {search ? "No results match your search." : "No leads yet."}
                     </td>
                   </tr>
@@ -135,6 +138,15 @@ export default function LeadsClient({
                         <a href={`mailto:${lead.email}`} onClick={(e) => e.stopPropagation()} className="hover:underline">
                           {lead.email}
                         </a>
+                      </td>
+                      <td className="px-5 py-3.5 text-stone-400 whitespace-nowrap">
+                        {lead.phone ? (
+                          <a href={`tel:${lead.phone}`} onClick={(e) => e.stopPropagation()} className="hover:underline">
+                            {lead.phone}
+                          </a>
+                        ) : (
+                          <span className="text-stone-700">—</span>
+                        )}
                       </td>
                       <td className="px-5 py-3.5 text-stone-400 whitespace-nowrap">
                         {lead.company ?? <span className="text-stone-700">—</span>}
@@ -157,7 +169,7 @@ export default function LeadsClient({
                     </tr>
                     {expanded === lead.id && lead.message && (
                       <tr className="border-b border-stone-800/60 bg-stone-800/20">
-                        <td colSpan={6} className="px-5 py-4">
+                        <td colSpan={7} className="px-5 py-4">
                           <p className="text-xs font-semibold text-stone-500 uppercase tracking-widest mb-2">Full message</p>
                           <p className="text-stone-300 text-sm leading-relaxed whitespace-pre-wrap">{lead.message}</p>
                         </td>

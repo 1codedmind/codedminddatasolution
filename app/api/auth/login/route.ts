@@ -72,6 +72,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
   }
 
+  // Social sign-in accounts have no password. Point them at the right button
+  // instead of failing with a message that can never be satisfied.
+  if (!candidate.passwordHash || !candidate.passwordSalt) {
+    return NextResponse.json(
+      { error: "This account was created with Google. Use \"Continue with Google\" to sign in." },
+      { status: 401 },
+    );
+  }
+
   const validPassword = verifyPassword(password, candidate.passwordSalt, candidate.passwordHash);
   if (!validPassword) {
     return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });

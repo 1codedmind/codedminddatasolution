@@ -2,12 +2,17 @@ import Link from "next/link";
 import { Mail } from "lucide-react";
 
 const navLinks = [
-  { label: "Services", href: "/#services" },
+  { label: "Services", href: "/services" },
   { label: "Solutions", href: "/#solutions" },
   { label: "Why us", href: "/#why-us" },
   { label: "Process", href: "/#process" },
   { label: "Careers", href: "/careers" },
-  { label: "Contact", href: "/#cta" },
+  { label: "Contact", href: "/contact" },
+];
+
+const legalLinks = [
+  { label: "Privacy Policy", href: "/privacy" },
+  { label: "Terms & Conditions", href: "/terms" },
 ];
 
 const toolLinks = [
@@ -89,9 +94,17 @@ export default function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="pt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-stone-600">
+        <div className="pt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-stone-600">
           <p>&copy; 2026 Coded Mind. All rights reserved.</p>
-          <p>Built with precision. Powered by data.</p>
+          <ul className="flex flex-wrap items-center gap-x-5 gap-y-2">
+            {legalLinks.map((l) => (
+              <li key={l.href}>
+                <Link href={l.href} className="hover:text-stone-400 transition-colors">
+                  {l.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
 
       </div>

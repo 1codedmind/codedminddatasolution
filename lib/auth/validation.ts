@@ -1,9 +1,17 @@
 import { PASSWORD_LIMITS } from "@/lib/auth/config";
 
+// Letters (any script), plus the punctuation real names use. Digits and symbols
+// are rejected — a name field that accepts "12345" was a reported defect.
+const NAME_PATTERN = /^[\p{L}\p{M}][\p{L}\p{M}'\-. ]*$/u;
+
 export function validateFullName(value: string) {
   const fullName = value.trim().replace(/\s+/g, " ");
 
   if (fullName.length < 2 || fullName.length > 80) {
+    return null;
+  }
+
+  if (!NAME_PATTERN.test(fullName)) {
     return null;
   }
 
@@ -40,7 +48,7 @@ export function getSignupValidationError(input: {
   password?: string;
 }) {
   if (!validateFullName(input.fullName ?? "")) {
-    return "Please enter a valid full name.";
+    return "Please enter a valid full name (letters only, 2-80 characters).";
   }
 
   if (!validateEmail(input.email ?? "")) {

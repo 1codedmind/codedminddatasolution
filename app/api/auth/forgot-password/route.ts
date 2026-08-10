@@ -41,12 +41,23 @@ export async function POST(request: NextRequest) {
   }
 
   // Always return the same success response whether or not the account exists,
-  // so this endpoint can't be used to probe for registered emails.
+  // so this endpoint can't be used to probe for registered emails. The one
+  // exception is a send failure: silently claiming "sent" strands the user.
   const kind = await findUserKindByEmail(email);
   if (kind) {
     const token = await createResetToken(email, kind);
     const origin = process.env.NEXT_PUBLIC_SITE_URL ?? "https://codedmind.co.in";
-    await sendResetEmail(email, `${origin}/reset-password?token=${token}`);
+    const sent = await sendResetEmail(email, `${origin}/reset-password?token=${token}`);
+    if (!sent) {
+      console.error("[forgot-password] reset email failed to send");
+      return NextResponse.json(
+        {
+          error:
+            "We couldn't send the reset email right now. Please try again shortly, or contact hr@codedmind.co.in.",
+        },
+        { status: 502 },
+      );
+    }
   }
 
   return NextResponse.json({

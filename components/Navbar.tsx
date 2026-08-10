@@ -13,7 +13,7 @@ const toolsMenu = [
 ];
 
 const navLinks = [
-  { label: "Services",  href: "/#services"  },
+  { label: "Services",  href: "/services"   },
   { label: "Solutions", href: "/#solutions" },
   { label: "Careers",   href: "/careers"    },
 ];
@@ -165,7 +165,7 @@ export default function Navbar({ sessionEmail, sessionRole }: { sessionEmail?: s
               <>
                 <Link href="/login" className="px-3 py-1.5 text-sm font-medium text-stone-600 hover:text-stone-950 transition-colors">Log in</Link>
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
-                  <Link href="/#cta" className="px-3.5 py-1.5 text-sm font-semibold text-white bg-stone-950 rounded-lg hover:bg-stone-800 transition-colors">
+                  <Link href="/contact" className="px-3.5 py-1.5 text-sm font-semibold text-white bg-stone-950 rounded-lg hover:bg-stone-800 transition-colors">
                     Get in touch
                   </Link>
                 </motion.div>
@@ -230,7 +230,7 @@ export default function Navbar({ sessionEmail, sessionRole }: { sessionEmail?: s
               ) : (
                 <div className="grid grid-cols-2 gap-2">
                   <Link href="/login" onClick={() => setMobileOpen(false)} className="flex items-center justify-center py-2.5 text-sm font-medium text-stone-700 border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors">Log in</Link>
-                  <Link href="/#cta" onClick={() => setMobileOpen(false)} className="flex items-center justify-center py-2.5 text-sm font-semibold text-white bg-stone-950 rounded-xl hover:bg-stone-800 transition-colors">Get in touch</Link>
+                  <Link href="/contact" onClick={() => setMobileOpen(false)} className="flex items-center justify-center py-2.5 text-sm font-semibold text-white bg-stone-950 rounded-xl hover:bg-stone-800 transition-colors">Get in touch</Link>
                 </div>
               )}
             </div>

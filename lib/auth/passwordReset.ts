@@ -91,34 +91,45 @@ export async function sendResetEmail(email: string, resetUrl: string): Promise<b
   const fromAddress = process.env.RESET_EMAIL_FROM ?? "Coded Mind <noreply@codedmind.co.in>";
   if (!apiKey) return false;
 
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      from: fromAddress,
-      to: [email],
-      subject: "Reset your Coded Mind password",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto;">
-          <h2 style="color: #1c1917;">Reset your password</h2>
-          <p style="color: #57534e; line-height: 1.6;">
-            We received a request to reset the password for your Coded Mind account.
-            Click the button below to choose a new password. This link is valid for 1 hour.
-          </p>
-          <a href="${resetUrl}"
-             style="display: inline-block; background: #d97706; color: #fff; padding: 12px 28px; border-radius: 999px; text-decoration: none; font-weight: 600; margin: 16px 0;">
-            Reset password
-          </a>
-          <p style="color: #a8a29e; font-size: 13px; line-height: 1.6;">
-            If you didn't request this, you can safely ignore this email — your password will not change.
-          </p>
-        </div>
-      `,
-    }),
-  });
+  let res: Response;
+  try {
+    res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        from: fromAddress,
+        to: [email],
+        subject: "Reset your Coded Mind password",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto;">
+            <h2 style="color: #1c1917;">Reset your password</h2>
+            <p style="color: #57534e; line-height: 1.6;">
+              We received a request to reset the password for your Coded Mind account.
+              Click the button below to choose a new password. This link is valid for 1 hour.
+            </p>
+            <a href="${resetUrl}"
+               style="display: inline-block; background: #d97706; color: #fff; padding: 12px 28px; border-radius: 999px; text-decoration: none; font-weight: 600; margin: 16px 0;">
+              Reset password
+            </a>
+            <p style="color: #a8a29e; font-size: 13px; line-height: 1.6;">
+              If you didn't request this, you can safely ignore this email — your password will not change.
+            </p>
+          </div>
+        `,
+      }),
+    });
+  } catch (err) {
+    console.error("[passwordReset] Resend request failed:", err);
+    return false;
+  }
 
-  return res.ok;
+  if (!res.ok) {
+    console.error("[passwordReset] Resend returned", res.status, await res.text().catch(() => ""));
+    return false;
+  }
+
+  return true;
 }

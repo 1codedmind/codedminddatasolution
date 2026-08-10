@@ -23,6 +23,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/tools/pdf/compress",        priority: 0.9, changefreq: "monthly" as const },
     { path: "/tools/pdf/rotate",          priority: 0.8, changefreq: "monthly" as const },
     { path: "/tools/pdf/jpg-to-pdf",      priority: 0.8, changefreq: "monthly" as const },
+    { path: "/tools/pdf/sign",            priority: 0.9, changefreq: "monthly" as const },
   ];
 
   return [
@@ -34,6 +35,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: changefreq,
       priority,
     })),
-    { url: `${BASE}/careers`, lastModified: now, changeFrequency: "weekly", priority: 0.6 },
+    { url: `${BASE}/services`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
+    { url: `${BASE}/contact`,  lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${BASE}/careers`,  lastModified: now, changeFrequency: "weekly",  priority: 0.6 },
+    { url: `${BASE}/privacy`,  lastModified: now, changeFrequency: "yearly",  priority: 0.3 },
+    { url: `${BASE}/terms`,    lastModified: now, changeFrequency: "yearly",  priority: 0.3 },
   ];
 }

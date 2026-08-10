@@ -6,7 +6,8 @@ export type CandidateUser = {
   createdAt: string;
 };
 
+// Null for accounts created through social sign-in, which have no password.
 export type CandidateUserRecord = CandidateUser & {
-  passwordSalt: string;
-  passwordHash: string;
+  passwordSalt: string | null;
+  passwordHash: string | null;
 };
