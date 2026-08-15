@@ -249,7 +249,12 @@ export default function ChatWidget() {
             {/* Messages */}
             <div
               ref={messagesRef}
-              className="max-h-80 space-y-2.5 overflow-y-auto px-4 py-4 scroll-smooth"
+              // data-lenis-prevent stops the smooth-scroll library from
+              // hijacking wheel events here — without it the page scrolls
+              // instead of the conversation. overscroll-contain stops the
+              // scroll chaining to the page once the list hits top or bottom.
+              data-lenis-prevent
+              className="max-h-80 space-y-2.5 overflow-y-auto overscroll-contain px-4 py-4 scroll-smooth"
             >
               {messages.map((msg) => (
                 <motion.div
