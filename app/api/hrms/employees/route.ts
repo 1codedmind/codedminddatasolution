@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
+import { recordAudit } from "@/lib/hrms/audit";
 import { hasPermission } from "@/lib/hrms/access";
 import { createEmployee } from "@/lib/hrms/employees";
 import { hasDatabaseUrl } from "@/lib/db";
@@ -14,7 +15,7 @@ export async function POST(req: NextRequest) {
   }
 
   // 10 onboards per 5 minutes per user
-  if (!enforceRateLimit(`hrms:onboard:${session.sub}`, 10, 5 * 60_000)) {
+  if (!(await enforceRateLimit(`hrms:onboard:${session.sub}`, 10, 5 * 60_000))) {
     return NextResponse.json({ error: "Too many requests. Try again in a few minutes." }, { status: 429 });
   }
 
@@ -60,6 +61,14 @@ export async function POST(req: NextRequest) {
   if (!result) {
     return NextResponse.json({ error: "An account with that email already exists." }, { status: 409 });
   }
+
+  await recordAudit({
+    actor: session,
+    action: "employee.create",
+    targetType: "team_member",
+    targetId: result.id,
+    detail: `${email.trim().toLowerCase()} as ${role ?? "employee"}`,
+  });
 
   return NextResponse.json({ ok: true, id: result.id });
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
+import { recordAudit } from "@/lib/hrms/audit";
 import { hasPermission } from "@/lib/hrms/access";
 import { updateEmployeeProfile } from "@/lib/hrms/employees";
 import { hasDatabaseUrl } from "@/lib/db";
@@ -15,7 +16,7 @@ export async function PUT(
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   // 20 profile updates per minute per user
-  if (!enforceRateLimit(`hrms:profile-update:${session.sub}`, 20, 60_000)) {
+  if (!(await enforceRateLimit(`hrms:profile-update:${session.sub}`, 20, 60_000))) {
     return NextResponse.json({ error: "Too many requests. Slow down." }, { status: 429 });
   }
 
@@ -49,5 +50,7 @@ export async function PUT(
     emergencyContactPhone:  body.emergencyContactPhone,
     reportingTo:            body.reportingTo,
   });
+  await recordAudit({ actor: session, action: "employee.update", targetType: "team_member", targetId: id });
+
   return NextResponse.json({ ok: true });
 }

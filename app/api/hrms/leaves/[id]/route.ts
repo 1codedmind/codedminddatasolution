@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
+import { recordAudit } from "@/lib/hrms/audit";
 import { hasPermission } from "@/lib/hrms/access";
 import { reviewLeaveRequest, getLeaveRequest } from "@/lib/hrms/leaves";
 import { hasDatabaseUrl } from "@/lib/db";
@@ -17,7 +18,7 @@ export async function PUT(
   }
 
   // 30 leave reviews per minute per user (reviewing a queue of leaves is valid)
-  if (!enforceRateLimit(`hrms:leave-review:${session.sub}`, 30, 60_000)) {
+  if (!(await enforceRateLimit(`hrms:leave-review:${session.sub}`, 30, 60_000))) {
     return NextResponse.json({ error: "Too many requests. Slow down." }, { status: 429 });
   }
 
@@ -38,11 +39,28 @@ export async function PUT(
   if (!leave) return NextResponse.json({ error: "Leave request not found." }, { status: 404 });
   if (leave.status !== "pending") return NextResponse.json({ error: "Only pending requests can be reviewed." }, { status: 409 });
 
+  // Separation of duties: holding leaves:approve does not let you approve your
+  // own request, however senior you are.
+  if (leave.memberId === session.sub) {
+    return NextResponse.json(
+      { error: "You cannot review your own leave request. Ask another approver." },
+      { status: 403 },
+    );
+  }
+
   await reviewLeaveRequest({
     id,
     status: body.status,
     reviewedBy: session.sub,
     reviewNote: body.reviewNote,
+  });
+
+  await recordAudit({
+    actor: session,
+    action: "leave.review",
+    targetType: "leave_request",
+    targetId: id,
+    detail: body.status,
   });
 
   return NextResponse.json({ ok: true });

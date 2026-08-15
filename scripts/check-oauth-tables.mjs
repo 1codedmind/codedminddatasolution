@@ -26,7 +26,14 @@ const tables = await sql`
 console.log("Tables:");
 console.log(tables.map((t) => `  ${t.table_name}`).join("\n") || "  (none)");
 
-const expected = ["candidates", "team_members", "candidate_identities", "team_member_identities"];
+const expected = [
+  "candidates",
+  "team_members",
+  "candidate_identities",
+  "team_member_identities",
+  "rate_limits",
+  "audit_log",
+];
 const present = new Set(tables.map((t) => t.table_name));
 console.log("\nMigration check:");
 for (const name of expected) {
@@ -43,6 +50,25 @@ if (present.has("team_member_identities")) {
   const rows = await sql`SELECT provider, email, created_at FROM team_member_identities ORDER BY created_at`;
   console.log(`\nLinked staff identities (${rows.length}):`);
   for (const r of rows) console.log(`  ${r.provider}  ${r.email}  ${r.created_at}`);
+}
+
+// session_version is a column, not a table, so check it separately.
+const versionColumns = await sql`
+  SELECT table_name FROM information_schema.columns
+  WHERE table_schema = 'public' AND column_name = 'session_version'
+`;
+const withVersion = new Set(versionColumns.map((c) => c.table_name));
+for (const name of ["candidates", "team_members"]) {
+  console.log(`  ${withVersion.has(name) ? "OK     " : "MISSING"} ${name}.session_version`);
+}
+
+if (present.has("audit_log")) {
+  const rows = await sql`
+    SELECT action, actor_email, target_id, created_at
+    FROM audit_log ORDER BY created_at DESC LIMIT 10
+  `;
+  console.log(`\nMost recent audited actions (${rows.length}):`);
+  for (const r of rows) console.log(`  ${r.action.padEnd(24)} by ${r.actor_email}`);
 }
 
 if (present.has("team_members")) {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { enforceRateLimit } from "@/lib/auth/rate-limit";
 import { getClientIp } from "@/lib/auth/security";
 import { getCurrentSession } from "@/lib/auth/session";
+import { isEmailVerified } from "@/lib/auth/emailVerification";
 import {
   getUserPlan,
   getUserParseCounts,
@@ -53,7 +54,7 @@ const INTERNAL_ROLES = new Set(["employee", "admin", "superadmin"]);
 export async function POST(request: NextRequest) {
   // ── 1. IP-based spam guard (first line of defence, no DB) ─────────────────
   const ip = getClientIp(request);
-  if (!enforceRateLimit(`resume-parse:${ip}`, 20, 60_000)) {
+  if (!(await enforceRateLimit(`resume-parse:${ip}`, 20, 60_000))) {
     return NextResponse.json({ error: "Too many requests. Slow down." }, { status: 429 });
   }
 
@@ -63,6 +64,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { error: "Sign in to use AI resume upload.", code: "UNAUTHENTICATED" },
       { status: 401 },
+    );
+  }
+
+  // ── 2b. Email must be confirmed ──────────────────────────────────────────
+  // The soft-restriction policy: browsing stays open, but the actions that cost
+  // us money or reach a human are gated until the address is proven.
+  if (session.role === "candidate" && !(await isEmailVerified(session.email))) {
+    return NextResponse.json(
+      {
+        error: "Confirm your email address to use AI resume upload. Check your inbox, or resend from your dashboard.",
+        code: "EMAIL_UNVERIFIED",
+      },
+      { status: 403 },
     );
   }
 

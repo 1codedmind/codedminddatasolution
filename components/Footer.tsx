@@ -3,6 +3,7 @@ import { Mail } from "lucide-react";
 
 const navLinks = [
   { label: "Services", href: "/services" },
+  { label: "IT Services", href: "/it-services" },
   { label: "Solutions", href: "/#solutions" },
   { label: "Why us", href: "/#why-us" },
   { label: "Process", href: "/#process" },

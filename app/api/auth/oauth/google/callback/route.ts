@@ -18,6 +18,7 @@ import {
   statesMatch,
 } from "@/lib/auth/oauth/flow";
 import { findOrCreateUserForGoogle } from "@/lib/auth/oauth/identities";
+import { getSessionVersion } from "@/lib/auth/sessionVersion";
 
 /**
  * Google redirects the browser here after the consent screen.
@@ -49,7 +50,7 @@ export async function GET(request: NextRequest) {
   }
 
   const ip = getClientIp(request);
-  if (!enforceRateLimit(`oauth-callback:${ip}`, 20, 5 * 60_000)) {
+  if (!(await enforceRateLimit(`oauth-callback:${ip}`, 20, 5 * 60_000))) {
     return redirectTo(request, "/login?error=rate_limited");
   }
 
@@ -94,7 +95,9 @@ export async function GET(request: NextRequest) {
     return redirectTo(request, `/login?error=${result.reason}`);
   }
 
-  const token = createSessionToken(result.session);
+  const kind = result.session.role === "candidate" ? "candidate" : "team";
+  const ver = await getSessionVersion(kind, result.session.sub);
+  const token = createSessionToken({ ...result.session, ver });
 
   // Same destinations the password login uses, so both paths land alike.
   const hrmsRoles = ["superadmin", "admin", "employee"];

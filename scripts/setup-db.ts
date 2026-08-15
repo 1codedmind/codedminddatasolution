@@ -86,6 +86,52 @@ async function run() {
     ON team_member_identities (team_member_id)`;
   ok("team_member_identities", "staff social logins (Google)");
 
+  // Session invalidation. Default 0 matches tokens issued before this existed,
+  // so applying the migration signs nobody out.
+  await sql`ALTER TABLE IF EXISTS candidates   ADD COLUMN IF NOT EXISTS session_version INTEGER NOT NULL DEFAULT 0`;
+  await sql`ALTER TABLE IF EXISTS team_members ADD COLUMN IF NOT EXISTS session_version INTEGER NOT NULL DEFAULT 0`;
+  ok("session_version", "password reset revokes existing sessions");
+
+  // Defaults to TRUE so existing accounts are grandfathered; only new signups
+  // are written as FALSE.
+  await sql`ALTER TABLE IF EXISTS candidates ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAULT TRUE`;
+  await sql`
+    CREATE TABLE IF NOT EXISTS email_verification_tokens (
+      token_hash TEXT        PRIMARY KEY,
+      email      TEXT        NOT NULL,
+      expires_at TIMESTAMPTZ NOT NULL,
+      used_at    TIMESTAMPTZ,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_email_verification_email ON email_verification_tokens (email)`;
+  ok("email_verification", "signup email confirmation");
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS rate_limits (
+      key        TEXT        PRIMARY KEY,
+      count      INTEGER     NOT NULL,
+      expires_at TIMESTAMPTZ NOT NULL
+    )`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_rate_limits_expires ON rate_limits (expires_at)`;
+  ok("rate_limits", "shared rate-limit counters (was per-instance memory)");
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS audit_log (
+      id           TEXT        PRIMARY KEY,
+      actor_id     TEXT        NOT NULL,
+      actor_email  TEXT        NOT NULL,
+      actor_role   TEXT        NOT NULL,
+      action       TEXT        NOT NULL,
+      target_type  TEXT,
+      target_id    TEXT,
+      detail       TEXT,
+      created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_audit_log_created ON audit_log (created_at DESC)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_audit_log_actor   ON audit_log (actor_id, created_at DESC)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_audit_log_target  ON audit_log (target_type, target_id)`;
+  ok("audit_log", "privileged HRMS actions");
+
   await sql`
     CREATE TABLE IF NOT EXISTS leads (
       id          TEXT PRIMARY KEY,

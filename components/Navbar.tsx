@@ -14,6 +14,7 @@ const toolsMenu = [
 
 const navLinks = [
   { label: "Services",  href: "/services"   },
+  { label: "IT Services", href: "/it-services" },
   { label: "Solutions", href: "/#solutions" },
   { label: "Careers",   href: "/careers"    },
 ];

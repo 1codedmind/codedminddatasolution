@@ -3,12 +3,18 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { AUTH_COOKIE_NAME, RATE_LIMITS } from "@/lib/auth/config";
 import { verifyPassword } from "@/lib/auth/crypto";
-import { enforceRateLimit } from "@/lib/auth/rate-limit";
+import { enforceRateLimit, recordFailure, getFailureCount, clearFailures } from "@/lib/auth/rate-limit";
+import { getSessionVersion } from "@/lib/auth/sessionVersion";
 import { getSessionCookieOptions, createSessionToken } from "@/lib/auth/session";
 import { getClientIp, isTrustedOrigin, normalizeEmail } from "@/lib/auth/security";
 import { findCandidateByEmail, sanitizeCandidateUser } from "@/lib/auth/users";
 import { findTeamMemberByEmail } from "@/lib/auth/team";
 import { validateEmail } from "@/lib/auth/validation";
+
+// 15 failures for a single account within an hour locks it until the window
+// rolls off. A correct password clears the counter immediately.
+const LOCKOUT_THRESHOLD = 15;
+const LOCKOUT_WINDOW_MS = 60 * 60_000;
 
 export async function POST(request: NextRequest) {
   if (!isTrustedOrigin(request)) {
@@ -28,7 +34,7 @@ export async function POST(request: NextRequest) {
   const password = body.password?.trim() ?? "";
 
   const rateLimitKey = `login:${ip}:${normalizeEmail(body.email ?? "")}`;
-  const allowed = enforceRateLimit(
+  const allowed = await enforceRateLimit(
     rateLimitKey,
     RATE_LIMITS.login.maxAttempts,
     RATE_LIMITS.login.windowMs,
@@ -41,7 +47,18 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Account lockout: unlike the per-IP limit above, this counter is keyed on
+  // the account alone, so an attacker rotating IP addresses still trips it.
+  const lockoutKey = `login-fail:${normalizeEmail(body.email ?? "")}`;
+  if ((await getFailureCount(lockoutKey)) >= LOCKOUT_THRESHOLD) {
+    return NextResponse.json(
+      { error: "Too many failed attempts for this account. Try again later, or reset your password." },
+      { status: 429 },
+    );
+  }
+
   if (!email || !password) {
+    await recordFailure(lockoutKey, LOCKOUT_WINDOW_MS);
     return NextResponse.json(
       { error: "Invalid email or password." },
       { status: 400 },
@@ -57,9 +74,15 @@ export async function POST(request: NextRequest) {
     }
     const valid = verifyPassword(password, teamMember.passwordSalt, teamMember.passwordHash);
     if (!valid) {
+      await recordFailure(lockoutKey, LOCKOUT_WINDOW_MS);
       return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
     }
-    const token = createSessionToken({ sub: teamMember.id, email: teamMember.email, role: teamMember.role });
+    // A correct password clears both counters, so ordinary repeat sign-ins
+    // never accumulate toward the limit — only failures do.
+    await clearFailures(lockoutKey);
+    await clearFailures(rateLimitKey);
+    const ver = await getSessionVersion("team", teamMember.id);
+    const token = createSessionToken({ sub: teamMember.id, email: teamMember.email, role: teamMember.role, ver });
     const cookieStore = await cookies();
     cookieStore.set(AUTH_COOKIE_NAME, token, getSessionCookieOptions());
     const hrmsRoles = ["superadmin", "admin", "employee"];
@@ -69,6 +92,7 @@ export async function POST(request: NextRequest) {
 
   const candidate = await findCandidateByEmail(email);
   if (!candidate) {
+    await recordFailure(lockoutKey, LOCKOUT_WINDOW_MS);
     return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
   }
 
@@ -83,11 +107,15 @@ export async function POST(request: NextRequest) {
 
   const validPassword = verifyPassword(password, candidate.passwordSalt, candidate.passwordHash);
   if (!validPassword) {
+    await recordFailure(lockoutKey, LOCKOUT_WINDOW_MS);
     return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
   }
+  await clearFailures(lockoutKey);
+  await clearFailures(rateLimitKey);
 
   const safeUser = sanitizeCandidateUser(candidate);
-  const token = createSessionToken({ sub: safeUser.id, email: safeUser.email, role: safeUser.role });
+  const ver = await getSessionVersion("candidate", safeUser.id);
+  const token = createSessionToken({ sub: safeUser.id, email: safeUser.email, role: safeUser.role, ver });
   const cookieStore = await cookies();
   cookieStore.set(AUTH_COOKIE_NAME, token, getSessionCookieOptions());
   return NextResponse.json({ ok: true, redirectTo: "/candidate", user: safeUser });

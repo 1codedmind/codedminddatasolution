@@ -11,9 +11,10 @@ interface SmoothScrollProps {
 export default function SmoothScroll({ children }: SmoothScrollProps) {
   const pathname = usePathname();
   // Lenis hijacks document scroll, which breaks internal scroll containers
-  // (e.g. the resume builder's sidebar/preview panels). Only run it on the
-  // landing page, which is designed as a single full-page scroll experience.
-  const enabled = pathname === "/";
+  // (e.g. the resume builder's sidebar/preview panels). Only run it on pages
+  // designed as a single full-page scroll experience.
+  const SMOOTH_SCROLL_ROUTES = ["/", "/services", "/it-services"];
+  const enabled = SMOOTH_SCROLL_ROUTES.includes(pathname);
 
   useEffect(() => {
     if (!enabled) return;

@@ -11,7 +11,7 @@ export async function POST(req: Request) {
   }
 
   const ip = getClientIp(req as Parameters<typeof getClientIp>[0]);
-  if (!enforceRateLimit(`lead:${ip}`, 5, 60_000)) {
+  if (!(await enforceRateLimit(`lead:${ip}`, 5, 60_000))) {
     return NextResponse.json({ error: "Too many submissions. Please try again later." }, { status: 429 });
   }
 

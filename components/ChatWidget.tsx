@@ -1,10 +1,14 @@
 "use client";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { Bot, MessageCircle, Send, X } from "lucide-react";
+import { Bot, CheckCircle2, MessageCircle, Send, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
-type Message = { id: string; role: "assistant" | "user"; text: string };
+type Message = {
+  id: string;
+  role: "assistant" | "user" | "notice";
+  text: string;
+};
 
 const WELCOME: Message = {
   id: "welcome",
@@ -105,6 +109,11 @@ export default function ChatWidget() {
 
       if (!res.body) throw new Error("No response stream received.");
 
+      // The route reports lead capture via headers, since the body is a stream.
+      const leadCaptured   = res.headers.get("X-Lead-Captured") === "1";
+      const serviceEnquiry = res.headers.get("X-Service-Enquiry") === "1";
+      const signedIn       = res.headers.get("X-Signed-In") === "1";
+
       // Add empty placeholder that we'll fill token-by-token
       setMessages((prev) => [...prev, { id: assistantId, role: "assistant", text: "" }]);
       setStreaming(true);
@@ -139,6 +148,26 @@ export default function ChatWidget() {
       }
 
       if (!fullText) throw new Error("Empty response — please try again.");
+
+      if (leadCaptured) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `n-${Date.now()}`,
+            role: "notice",
+            text: "Your enquiry has been sent to our team. Expect a reply by email within 1–2 business days.",
+          },
+        ]);
+      } else if (serviceEnquiry && !signedIn) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `n-${Date.now()}`,
+            role: "notice",
+            text: "Sign in — or use the contact page — and we'll route your question straight to the team.",
+          },
+        ]);
+      }
 
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Something went wrong.";
@@ -228,15 +257,26 @@ export default function ChatWidget() {
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.2 }}
-                  className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                  className={`flex ${
+                    msg.role === "user"
+                      ? "justify-end"
+                      : msg.role === "notice"
+                        ? "justify-center"
+                        : "justify-start"
+                  }`}
                 >
                   <div
                     className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed whitespace-pre-wrap ${
                       msg.role === "user"
                         ? "bg-stone-950 text-white"
-                        : "bg-white text-stone-800 border border-stone-200"
+                        : msg.role === "notice"
+                          ? "flex items-start gap-2 border border-emerald-200 bg-emerald-50 text-xs text-emerald-900"
+                          : "bg-white text-stone-800 border border-stone-200"
                     }`}
                   >
+                    {msg.role === "notice" && (
+                      <CheckCircle2 size={13} className="mt-0.5 shrink-0 text-emerald-600" />
+                    )}
                     {msg.role === "assistant" ? formatAssistantText(msg.text) : msg.text}
                     {streaming && msg.id.startsWith("a-") && msg.text && (
                       <span className="inline-block w-0.5 h-3.5 bg-stone-400 ml-0.5 animate-pulse align-middle" />
@@ -291,7 +331,7 @@ export default function ChatWidget() {
                 <p className="mt-2 text-[11px] text-rose-500">{error}</p>
               ) : (
                 <p className="mt-2 text-[11px] text-stone-400">
-                  Shift+Enter for new line · Powered by AI
+                  Shift+Enter for new line · AI assistant — may be inaccurate, confirm details with us
                 </p>
               )}
             </form>

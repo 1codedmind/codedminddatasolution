@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
+import { recordAudit } from "@/lib/hrms/audit";
 import { hasPermission } from "@/lib/hrms/access";
 import { getPayrollRun, updatePayrollRunStatus, deletePayrollRun } from "@/lib/hrms/payroll";
 import { hasDatabaseUrl } from "@/lib/db";
@@ -31,6 +32,8 @@ export async function PUT(
   }
 
   await updatePayrollRunStatus(id, status as "draft" | "processing" | "completed" | "cancelled");
+  await recordAudit({ actor: session, action: "payroll.item_change", targetType: "payroll_run", targetId: id });
+
   return NextResponse.json({ ok: true });
 }
 
@@ -47,5 +50,7 @@ export async function DELETE(
 
   const { id } = await params;
   await deletePayrollRun(id);
+  await recordAudit({ actor: session, action: "payroll.delete", targetType: "payroll_run", targetId: id });
+
   return NextResponse.json({ ok: true });
 }

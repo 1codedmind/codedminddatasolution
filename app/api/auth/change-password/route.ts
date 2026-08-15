@@ -3,7 +3,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { PASSWORD_LIMITS } from "@/lib/auth/config";
 import { verifyPassword } from "@/lib/auth/crypto";
 import { enforceRateLimit } from "@/lib/auth/rate-limit";
-import { getCurrentSession } from "@/lib/auth/session";
+import { cookies } from "next/headers";
+import { AUTH_COOKIE_NAME } from "@/lib/auth/config";
+import { getCurrentSession, createSessionToken, getSessionCookieOptions } from "@/lib/auth/session";
+import { bumpSessionVersion } from "@/lib/auth/sessionVersion";
 import { isTrustedOrigin } from "@/lib/auth/security";
 import { validatePassword } from "@/lib/auth/validation";
 import { updateUserPassword, type UserKind } from "@/lib/auth/passwordReset";
@@ -25,7 +28,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Sign in to change your password." }, { status: 401 });
   }
 
-  if (!enforceRateLimit(`change-pw:${session.sub}`, 5, 15 * 60_000)) {
+  if (!(await enforceRateLimit(`change-pw:${session.sub}`, 5, 15 * 60_000))) {
     return NextResponse.json({ error: "Too many attempts. Please try again later." }, { status: 429 });
   }
 
@@ -84,5 +87,18 @@ export async function POST(request: NextRequest) {
 
   await updateUserPassword(kind, session.email, newPassword);
 
-  return NextResponse.json({ ok: true, message: "Password changed successfully." });
+  // Sign out every other device, then re-issue this one so the user who just
+  // changed their own password is not logged out by their own action.
+  const ver = await bumpSessionVersion(kind, session.email);
+  const cookieStore = await cookies();
+  cookieStore.set(
+    AUTH_COOKIE_NAME,
+    createSessionToken({ sub: session.sub, email: session.email, role: session.role, ver }),
+    getSessionCookieOptions(),
+  );
+
+  return NextResponse.json({
+    ok: true,
+    message: "Password changed successfully. Other devices have been signed out.",
+  });
 }

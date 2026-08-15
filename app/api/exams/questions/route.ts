@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
   }
 
   // 60 question creates per minute per user
-  if (!enforceRateLimit(`exam:question-create:${session.sub}`, 60, 60_000)) {
+  if (!(await enforceRateLimit(`exam:question-create:${session.sub}`, 60, 60_000))) {
     return NextResponse.json({ error: "Too many requests. Slow down." }, { status: 429 });
   }
 

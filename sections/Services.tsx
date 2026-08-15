@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { GitBranch, Cloud, BarChart2, Zap, Package, ShieldCheck } from "lucide-react";
+import Link from "next/link";
+import { GitBranch, Cloud, BarChart2, Zap, Package, ShieldCheck, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { fadeUp, container } from "@/lib/motion";
 import {
@@ -202,7 +203,43 @@ export default function Services() {
               </motion.div>
             ))}
           </motion.div>
+
         </div>
+
+        {/* Route into the full services page — the cards above are a summary,
+            the dedicated page carries the depth a buyer needs. Sits outside the
+            horizontal scroll container so it is full width, not part of the rail. */}
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-40px" }}
+          transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+          className="mt-4 flex flex-col items-start gap-4 rounded-2xl border border-stone-800 bg-stone-950 p-7 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <div>
+            <p className="text-base font-bold text-white">
+              Data engineering, full-stack software, and AI — from one team.
+            </p>
+            <p className="mt-1.5 text-sm text-stone-400">
+              See how we build it, what we have already shipped, and how an engagement runs.
+            </p>
+          </div>
+          <div className="flex shrink-0 flex-wrap gap-3">
+            <Link
+              href="/services"
+              className="group inline-flex items-center gap-2 rounded-xl bg-[#C87660] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#b5664f]"
+            >
+              Explore services
+              <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
+            </Link>
+            <Link
+              href="/it-services"
+              className="inline-flex items-center gap-2 rounded-xl border border-stone-700 px-5 py-3 text-sm font-semibold text-stone-300 transition-colors hover:border-stone-600 hover:text-white"
+            >
+              IT services
+            </Link>
+          </div>
+        </motion.div>
       </div>
 
       {/* Platform marquee */}

@@ -32,7 +32,7 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
-  if (!enforceRateLimit(`hrms:payroll-item:${session.sub}`, 30, 5 * 60_000)) {
+  if (!(await enforceRateLimit(`hrms:payroll-item:${session.sub}`, 30, 5 * 60_000))) {
     return NextResponse.json({ error: "Too many requests." }, { status: 429 });
   }
 

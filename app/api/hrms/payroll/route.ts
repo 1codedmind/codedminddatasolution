@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
+import { recordAudit } from "@/lib/hrms/audit";
 import { hasPermission } from "@/lib/hrms/access";
 import { createPayrollRun } from "@/lib/hrms/payroll";
 import { hasDatabaseUrl } from "@/lib/db";
@@ -13,7 +14,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
-  if (!enforceRateLimit(`hrms:payroll-create:${session.sub}`, 10, 5 * 60_000)) {
+  if (!(await enforceRateLimit(`hrms:payroll-create:${session.sub}`, 10, 5 * 60_000))) {
     return NextResponse.json({ error: "Too many requests." }, { status: 429 });
   }
 
@@ -36,6 +37,13 @@ export async function POST(req: NextRequest) {
     periodYear: year,
     createdBy: session.sub,
     notes: notes as string | undefined,
+  });
+
+  await recordAudit({
+    actor: session,
+    action: "payroll.create",
+    targetType: "payroll_run",
+    targetId: result.id,
   });
 
   return NextResponse.json({ ok: true, id: result.id });

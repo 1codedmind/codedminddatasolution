@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCurrentSession } from "@/lib/auth/session";
+import { cookies } from "next/headers";
+import { AUTH_COOKIE_NAME } from "@/lib/auth/config";
+import { getCurrentSession, createSessionToken, getSessionCookieOptions } from "@/lib/auth/session";
+import type { UserRole } from "@/lib/auth/session";
+import { recordAudit } from "@/lib/hrms/audit";
 import { hasPermission } from "@/lib/hrms/access";
 import { getSql, hasDatabaseUrl } from "@/lib/db";
 import { hashPassword, verifyPassword } from "@/lib/auth/crypto";
@@ -25,7 +29,7 @@ export async function PUT(
   }
 
   // 5 attempts per 10 minutes per user
-  if (!enforceRateLimit(`hrms:pwd-change:${session.sub}`, 5, 10 * 60_000)) {
+  if (!(await enforceRateLimit(`hrms:pwd-change:${session.sub}`, 5, 10 * 60_000))) {
     return NextResponse.json({ error: "Too many attempts. Try again later." }, { status: 429 });
   }
 
@@ -72,9 +76,40 @@ export async function PUT(
   const { hash, salt } = hashPassword(newPassword);
   await sql`
     UPDATE team_members
-    SET password_hash = ${hash}, password_salt = ${salt}
+    SET password_hash = ${hash}, password_salt = ${salt},
+        session_version = session_version + 1
     WHERE id = ${id}
   `;
+
+  // Bumping session_version above signs the target out of every device. When
+  // an admin resets someone else's password that is the point; when it is your
+  // own, re-issue your cookie so you are not logged out by your own action.
+  if (isSelf) {
+    const [row] = await sql<[{ email: string; role: string; ver: number }?]>`
+      SELECT email, role, session_version AS ver FROM team_members WHERE id = ${id} LIMIT 1
+    `;
+    if (row) {
+      const cookieStore = await cookies();
+      cookieStore.set(
+        AUTH_COOKIE_NAME,
+        createSessionToken({
+          sub: id,
+          email: row.email,
+          role: row.role as UserRole,
+          ver: Number(row.ver),
+        }),
+        getSessionCookieOptions(),
+      );
+    }
+  }
+
+  await recordAudit({
+    actor: session,
+    action: "employee.password_reset",
+    targetType: "team_member",
+    targetId: id,
+    detail: isSelf ? "self" : "reset by admin",
+  });
 
   return NextResponse.json({ ok: true });
 }

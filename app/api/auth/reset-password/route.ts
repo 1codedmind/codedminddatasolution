@@ -6,6 +6,7 @@ import { getClientIp, isTrustedOrigin } from "@/lib/auth/security";
 import { validatePassword } from "@/lib/auth/validation";
 import { consumeResetToken, updateUserPassword, verifyResetToken } from "@/lib/auth/passwordReset";
 import { hasDatabaseUrl } from "@/lib/db";
+import { bumpSessionVersion } from "@/lib/auth/sessionVersion";
 
 export async function POST(request: NextRequest) {
   if (!isTrustedOrigin(request)) {
@@ -16,7 +17,7 @@ export async function POST(request: NextRequest) {
   }
 
   const ip = getClientIp(request);
-  if (!enforceRateLimit(`reset-pw:${ip}`, 5, 15 * 60_000)) {
+  if (!(await enforceRateLimit(`reset-pw:${ip}`, 5, 15 * 60_000))) {
     return NextResponse.json({ error: "Too many attempts. Please try again later." }, { status: 429 });
   }
 
@@ -52,6 +53,11 @@ export async function POST(request: NextRequest) {
 
   await updateUserPassword(valid.kind, valid.email, password);
   await consumeResetToken(token);
+
+  // Revoke every session issued before this reset. Whoever prompted the reset
+  // is locked out immediately rather than keeping access until the token
+  // would have expired.
+  await bumpSessionVersion(valid.kind, valid.email);
 
   return NextResponse.json({ ok: true, message: "Password updated. You can now log in." });
 }

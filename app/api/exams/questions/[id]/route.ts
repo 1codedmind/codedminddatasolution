@@ -45,7 +45,7 @@ export async function PUT(
   }
 
   // 120 question updates per minute per user
-  if (!enforceRateLimit(`exam:question-update:${session.sub}`, 120, 60_000)) {
+  if (!(await enforceRateLimit(`exam:question-update:${session.sub}`, 120, 60_000))) {
     return NextResponse.json({ error: "Too many requests. Slow down." }, { status: 429 });
   }
 

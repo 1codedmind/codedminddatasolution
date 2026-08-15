@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
   }
 
   const ip = getClientIp(request);
-  if (!enforceRateLimit(`oauth-start:${ip}`, 10, 5 * 60_000)) {
+  if (!(await enforceRateLimit(`oauth-start:${ip}`, 10, 5 * 60_000))) {
     return loginError(request, "rate_limited");
   }
 

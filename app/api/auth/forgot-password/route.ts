@@ -5,6 +5,7 @@ import { getClientIp, isTrustedOrigin, normalizeEmail } from "@/lib/auth/securit
 import { validateEmail } from "@/lib/auth/validation";
 import { createResetToken, findUserKindByEmail, sendResetEmail } from "@/lib/auth/passwordReset";
 import { hasDatabaseUrl } from "@/lib/db";
+import { consumeEmailAllowance, dailyEmailLimit } from "@/lib/auth/emailQuota";
 
 export async function POST(request: NextRequest) {
   if (!isTrustedOrigin(request)) {
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
   }
 
   // 3 reset requests per 15 minutes per IP+email
-  if (!enforceRateLimit(`forgot-pw:${ip}:${normalizeEmail(body.email ?? "")}`, 3, 15 * 60_000)) {
+  if (!(await enforceRateLimit(`forgot-pw:${ip}:${normalizeEmail(body.email ?? "")}`, 3, 15 * 60_000))) {
     return NextResponse.json({ error: "Too many attempts. Please try again later." }, { status: 429 });
   }
 
@@ -37,6 +38,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { error: "Password reset email is not configured yet. Contact hr@codedmind.co.in to reset your password." },
       { status: 503 },
+    );
+  }
+
+  // Daily ceiling on emails to this address, across reset and verification.
+  // Consumed before the account lookup so the response is identical whether or
+  // not the account exists — see lib/auth/emailQuota.ts.
+  if (!(await consumeEmailAllowance(email, "password-reset"))) {
+    return NextResponse.json(
+      {
+        error: `For security, we only send ${dailyEmailLimit()} account emails per address per day. Please try again tomorrow, or contact hr@codedmind.co.in.`,
+      },
+      { status: 429 },
     );
   }
 

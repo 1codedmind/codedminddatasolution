@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
   }
 
   const ip = getClientIp(request);
-  const allowed = enforceRateLimit(
+  const allowed = await enforceRateLimit(
     `logout:${ip}`,
     RATE_LIMITS.logout.maxAttempts,
     RATE_LIMITS.logout.windowMs,

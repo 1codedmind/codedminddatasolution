@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
   }
 
   // 10 department creates per 5 minutes per user
-  if (!enforceRateLimit(`hrms:dept-create:${session.sub}`, 10, 5 * 60_000)) {
+  if (!(await enforceRateLimit(`hrms:dept-create:${session.sub}`, 10, 5 * 60_000))) {
     return NextResponse.json({ error: "Too many requests. Try again in a few minutes." }, { status: 429 });
   }
 

@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
-  if (!enforceRateLimit(`hrms:attendance:${session.sub}`, 20, 60_000)) {
+  if (!(await enforceRateLimit(`hrms:attendance:${session.sub}`, 20, 60_000))) {
     return NextResponse.json({ error: "Too many requests." }, { status: 429 });
   }
 
