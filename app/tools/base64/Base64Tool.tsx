@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Copy, Check } from "lucide-react";
 
 function CopyButton({ text }: { text: string }) {
@@ -21,25 +21,46 @@ function CopyButton({ text }: { text: string }) {
 export default function Base64Page() {
   const [input, setInput] = useState("");
   const [mode, setMode] = useState<"encode" | "decode">("encode");
-  const [error, setError] = useState("");
 
-  const output = (() => {
-    if (!input.trim()) return "";
+  /**
+   * Derived, not state.
+   *
+   * This previously called setError() from inside the render body. React treats
+   * that as a render-phase update and re-runs the component immediately —
+   * unconditionally, because the usual "same value, skip it" bailout does not
+   * apply during render. So every keystroke looped until React gave up with
+   * "Too many re-renders", and the tool produced nothing.
+   */
+  const { output, error } = useMemo(() => {
+    const value = input.trim();
+    if (!value) return { output: "", error: "" };
+
     try {
       if (mode === "encode") {
-        const result = btoa(unescape(encodeURIComponent(input)));
-        setError("");
-        return result;
-      } else {
-        const result = decodeURIComponent(escape(atob(input.trim())));
-        setError("");
-        return result;
+        // TextEncoder handles multi-byte UTF-8 properly, and avoids the
+        // deprecated escape/unescape globals the old version relied on.
+        const bytes = new TextEncoder().encode(input);
+        let binary = "";
+        for (const byte of bytes) binary += String.fromCharCode(byte);
+        return { output: btoa(binary), error: "" };
       }
+
+      // atob is lenient about junk, so check the alphabet ourselves first.
+      const compact = value.replace(/\s+/g, "");
+      if (!/^[A-Za-z0-9+/]*={0,2}$/.test(compact) || compact.length % 4 !== 0) {
+        return { output: "", error: "Invalid Base64 input." };
+      }
+
+      const binary = atob(compact);
+      const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+      return { output: new TextDecoder().decode(bytes), error: "" };
     } catch {
-      setError(mode === "decode" ? "Invalid Base64 input." : "Could not encode input.");
-      return "";
+      return {
+        output: "",
+        error: mode === "decode" ? "Invalid Base64 input." : "Could not encode input.",
+      };
     }
-  })();
+  }, [input, mode]);
 
   return (
     <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -53,7 +74,7 @@ export default function Base64Page() {
         {(["encode", "decode"] as const).map((m) => (
           <button
             key={m}
-            onClick={() => { setMode(m); setError(""); }}
+            onClick={() => setMode(m)}
             className={`px-5 py-2 text-sm font-semibold rounded-lg transition capitalize ${mode === m ? "bg-stone-900 text-white" : "bg-white text-stone-600 border border-stone-300 hover:bg-stone-50"}`}
           >
             {m}
@@ -70,7 +91,7 @@ export default function Base64Page() {
             className="w-full h-72 p-4 font-mono text-sm text-stone-800 bg-white border border-stone-200 rounded-xl resize-none focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
             placeholder={mode === "encode" ? "Enter text to encode…" : "Enter Base64 to decode…"}
             value={input}
-            onChange={(e) => { setInput(e.target.value); setError(""); }}
+            onChange={(e) => setInput(e.target.value)}
             spellCheck={false}
           />
         </div>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
-import { Menu, X, ChevronDown, CircleUserRound, LayoutDashboard, FileUser, ClipboardList, Braces, Globe, Files } from "lucide-react";
+import { Menu, X, ChevronDown, CircleUserRound, LayoutDashboard, FileUser, ClipboardList, Braces, Globe, Files, ArrowRight } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import LogoutButton from "@/components/auth/LogoutButton";
 
@@ -96,6 +96,20 @@ export default function Navbar({ sessionEmail, sessionRole }: { sessionEmail?: s
                         </div>
                       </Link>
                     ))}
+
+                    {/* The dropdown lists a few highlights; this is the way to
+                        the full catalogue, which visitors previously had no
+                        route to from the top nav. */}
+                    <Link
+                      href="/tools"
+                      onClick={() => setToolsOpen(false)}
+                      className="mt-1.5 flex items-center justify-between gap-3 rounded-lg border-t border-stone-100 px-3 py-2.5 transition hover:bg-stone-50"
+                    >
+                      <span className="text-[13px] font-semibold text-stone-800">
+                        Browse all tools
+                      </span>
+                      <ArrowRight size={13} className="text-stone-400" />
+                    </Link>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -214,6 +228,9 @@ export default function Navbar({ sessionEmail, sessionRole }: { sessionEmail?: s
                     className="block px-3 py-2.5 text-sm font-medium text-stone-700 hover:bg-stone-50 rounded-lg transition-colors">{label}
                   </Link>
                 ))}
+                <Link href="/tools" onClick={() => setMobileOpen(false)}
+                  className="block px-3 py-2.5 text-sm font-semibold text-amber-700 hover:bg-stone-50 rounded-lg transition-colors">Browse all tools →
+                </Link>
                 <div className="my-1.5 border-t border-stone-100" />
                 {navLinks.map(({ label, href }) => (
                   <Link key={label} href={href} onClick={() => setMobileOpen(false)}
