@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSql, hasDatabaseUrl } from "@/lib/db";
 import { ensureTable } from "@/lib/leads";
+import { checkEmailDomain } from "@/lib/auth/emailDomain";
 import { enforceRateLimit } from "@/lib/auth/rate-limit";
 import { getClientIp } from "@/lib/auth/security";
 import { randomUUID } from "crypto";
@@ -55,6 +56,12 @@ export async function POST(req: Request) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
   if (!emailRegex.test(cleanEmail)) {
     return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
+  }
+
+  // A lead we cannot reply to is not a lead. Same check as signup.
+  const domainCheck = await checkEmailDomain(cleanEmail);
+  if (!domainCheck.ok) {
+    return NextResponse.json({ error: domainCheck.message }, { status: 400 });
   }
 
   // Phone is optional, but must look like a phone number when supplied.

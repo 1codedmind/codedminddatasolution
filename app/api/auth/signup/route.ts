@@ -10,6 +10,7 @@ import {
   sendVerificationEmail,
 } from "@/lib/auth/emailVerification";
 import { consumeEmailAllowance } from "@/lib/auth/emailQuota";
+import { checkEmailDomain } from "@/lib/auth/emailDomain";
 import { enforceRateLimit } from "@/lib/auth/rate-limit";
 import { createCandidateUser } from "@/lib/auth/users";
 import {
@@ -57,6 +58,13 @@ export async function POST(request: NextRequest) {
       { error: validationError ?? "Please provide valid signup details." },
       { status: 400 },
     );
+  }
+
+  // Reject addresses that can never receive our confirmation email — typos and
+  // throwaway inboxes — before an account row exists for them.
+  const domainCheck = await checkEmailDomain(email);
+  if (!domainCheck.ok) {
+    return NextResponse.json({ error: domainCheck.message }, { status: 400 });
   }
 
   const user = await createCandidateUser({

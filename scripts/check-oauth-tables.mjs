@@ -33,6 +33,7 @@ const expected = [
   "team_member_identities",
   "rate_limits",
   "audit_log",
+  "email_verification_tokens",
 ];
 const present = new Set(tables.map((t) => t.table_name));
 console.log("\nMigration check:");
@@ -60,6 +61,25 @@ const versionColumns = await sql`
 const withVersion = new Set(versionColumns.map((c) => c.table_name));
 for (const name of ["candidates", "team_members"]) {
   console.log(`  ${withVersion.has(name) ? "OK     " : "MISSING"} ${name}.session_version`);
+}
+
+const verifiedCol = await sql`
+  SELECT table_name FROM information_schema.columns
+  WHERE table_schema = 'public' AND column_name = 'email_verified'
+`;
+console.log(`  ${verifiedCol.length ? "OK     " : "MISSING"} candidates.email_verified`);
+
+const phoneCol = await sql`
+  SELECT table_name FROM information_schema.columns
+  WHERE table_schema = 'public' AND table_name = 'leads' AND column_name = 'phone'
+`;
+console.log(`  ${phoneCol.length ? "OK     " : "MISSING"} leads.phone`);
+
+if (present.has("leads")) {
+  const [row] = await sql`SELECT count(*)::int AS n FROM leads`;
+  const bySource = await sql`SELECT source, count(*)::int AS n FROM leads GROUP BY source ORDER BY n DESC`;
+  console.log(`\nLeads (${row.n}):`);
+  for (const r of bySource) console.log(`  ${String(r.n).padStart(4)}  ${r.source ?? "(none)"}`);
 }
 
 if (present.has("audit_log")) {
