@@ -1,0 +1,3 @@
+# AdSense verification. Replace pub-0000000000000000 with your real publisher ID
+# once AdSense approves the site, or Google will not serve ads.
+google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0

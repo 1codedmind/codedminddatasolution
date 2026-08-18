@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import ChatWidget from "@/components/ChatWidget";
 import { ConsentProvider } from "@/components/CookieConsent";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
+import AdSenseScript from "@/components/ads/AdSenseScript";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import SmoothScroll from "@/components/landing/SmoothScroll";
@@ -89,6 +90,7 @@ export default function RootLayout({
           <Footer />
           <ChatWidget />
           <GoogleAnalytics />
+          <AdSenseScript />
           <Analytics />
           <SpeedInsights />
         </ConsentProvider>

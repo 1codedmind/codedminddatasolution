@@ -251,6 +251,23 @@ const tools: Passage[] = [
   },
 ];
 
+const games: Passage[] = [
+  {
+    id: "tool-games",
+    topic: "Free Tools",
+    url: "/tools/games",
+    keywords: ["game", "games", "gaming", "game tools"],
+    text: "Coded Mind publishes free browser-based tools for online games at codedmind.co.in/tools/games. No login or API key needed.",
+  },
+  {
+    id: "tool-torn",
+    topic: "Free Tools",
+    url: "/tools/games/torn-profit",
+    keywords: ["torn", "torn city", "bazaar", "profit finder", "trading", "buy low sell high", "item market"],
+    text: "The Torn Bazaar Profit Finder at codedmind.co.in/tools/games/torn-profit lists every Torn item currently selling in a player bazaar below what you can sell it for, ranked by profit, with both market-resale and vendor exit routes. Free, no Torn API key required. Coded Mind is not affiliated with Torn.",
+  },
+];
+
 const careers: Passage[] = [
   {
     id: "careers-overview",
@@ -294,6 +311,7 @@ export const KNOWLEDGE: Passage[] = [
   ...aiServices,
   ...products,
   ...tools,
+  ...games,
   ...careers,
   ...boundaries,
 ];

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Mail } from "lucide-react";
 
 const navLinks = [
+  { label: "About", href: "/about" },
   { label: "Services", href: "/services" },
   { label: "IT Services", href: "/it-services" },
   { label: "Solutions", href: "/#solutions" },

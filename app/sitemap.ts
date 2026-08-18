@@ -16,6 +16,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/tools/password-generator",  priority: 0.7, changefreq: "monthly" as const },
     // Resume builder
     { path: "/tools/resume-builder",      priority: 0.9, changefreq: "monthly" as const },
+    // Game tools
+    { path: "/about",                     priority: 0.7, changefreq: "yearly" as const },
+    { path: "/tools/games",              priority: 0.8, changefreq: "weekly" as const },
+    { path: "/tools/games/torn-profit",  priority: 0.8, changefreq: "daily" as const },
     // PDF tools
     { path: "/tools/pdf",                 priority: 0.9, changefreq: "monthly" as const },
     { path: "/tools/pdf/merge",           priority: 0.9, changefreq: "monthly" as const },

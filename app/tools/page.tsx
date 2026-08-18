@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Braces, Lock, Hash, AlignLeft, Clock, KeyRound, Globe, Files, Scissors, RotateCcw, FileImage, Minimize2, ArrowRight, CheckCircle2, PenLine } from "lucide-react";
+import { Braces, Lock, Hash, AlignLeft, Clock, KeyRound, Globe, Files, Scissors, RotateCcw, FileImage, Minimize2, ArrowRight, CheckCircle2, PenLine, TrendingUp, Gamepad2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { fadeUp, container } from "@/lib/motion";
 
@@ -198,6 +198,10 @@ const devTools = [
   { href: "/tools/password-generator", icon: KeyRound,  label: "Password Generator",  description: "Strong, random passwords with custom rules. Never transmitted." },
 ];
 
+const gameTools = [
+  { href: "/tools/games/torn-profit", icon: TrendingUp, label: "Torn Profit Finder", description: "Items selling in Torn player bazaars below market value, ranked by profit.", badge: "New" },
+];
+
 const pdfTools = [
   { href: "/tools/pdf/merge",      icon: Files,     label: "Merge PDF",    description: "Combine PDFs into one. Drag pages to set the order.", badge: "New" },
   { href: "/tools/pdf/split",      icon: Scissors,  label: "Split PDF",    description: "Extract individual pages or custom page ranges." },
@@ -302,6 +306,33 @@ export default function ToolsPage() {
             viewport={{ once: true, margin: "-40px" }}
           >
             {pdfTools.map((t) => <ToolCard key={t.href} {...t} />)}
+          </motion.div>
+        </div>
+
+        {/* Game tools */}
+        <div className="mt-14">
+          <motion.div
+            className="flex items-end justify-between mb-4"
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-40px" }}
+          >
+            <h2 className="flex items-center gap-2 text-sm font-bold text-stone-400 uppercase tracking-widest">
+              <Gamepad2 size={14} /> Game tools
+            </h2>
+            <Link href="/tools/games" className="flex items-center gap-1 text-xs font-medium text-stone-500 hover:text-stone-950 transition-colors">
+              View all game tools <ArrowRight size={12} />
+            </Link>
+          </motion.div>
+          <motion.div
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"
+            variants={container}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-40px" }}
+          >
+            {gameTools.map((t) => <ToolCard key={t.href} {...t} />)}
           </motion.div>
         </div>
 
