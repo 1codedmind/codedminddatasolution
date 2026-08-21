@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   keywords: ["pdf tools online", "free pdf editor", "merge pdf", "split pdf", "rotate pdf", "jpg to pdf", "pdf converter online"],
   alternates: { canonical: "https://codedmind.co.in/tools/pdf" },
   openGraph: {
+    images: ["/opengraph-image"],
     title: "Free PDF Tools — Merge, Split, Rotate & More",
     description: "Free browser-based PDF tools. No uploads. No account. Works offline.",
     url: "https://codedmind.co.in/tools/pdf",

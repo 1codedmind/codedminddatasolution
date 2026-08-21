@@ -15,6 +15,7 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: "https://codedmind.co.in/tools/word-counter" },
   openGraph: {
+    images: ["/opengraph-image"],
     title: "Word Counter — Count Words, Characters & Reading Time",
     description: "Real-time word, character, and sentence counter with estimated reading time. Free, no login.",
     url: "https://codedmind.co.in/tools/word-counter",

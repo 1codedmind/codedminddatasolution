@@ -36,6 +36,7 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: "https://codedmind.co.in/it-services" },
   openGraph: {
+    images: ["/opengraph-image"],
     title: "IT Services — Coded Mind",
     description:
       "Custom software, cloud and DevOps, and consulting or staff augmentation — senior engineers, delivered remotely.",

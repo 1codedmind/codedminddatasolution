@@ -17,6 +17,7 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: "https://codedmind.co.in/tools/timezone-converter" },
   openGraph: {
+    images: ["/opengraph-image"],
     title: "Timezone Converter — All 500+ IANA Timezones",
     description: "Convert times across all 500+ IANA timezones. Search by city, country, or abbreviation. Free, DST-aware.",
     url: "https://codedmind.co.in/tools/timezone-converter",

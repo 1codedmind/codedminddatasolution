@@ -47,6 +47,7 @@ export const metadata: Metadata = {
   authors: [{ name: "Coded Mind", url: BASE }],
   creator: "Coded Mind",
   openGraph: {
+    images: ["/opengraph-image"],
     type: "website",
     locale: "en_US",
     url: BASE,
@@ -54,13 +55,11 @@ export const metadata: Metadata = {
     title: "Coded Mind — Free Developer Tools & Data Services",
     description:
       "Free browser-based developer tools. No login, no data sent. JSON formatter, timezone converter, UUID generator, and more.",
-    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Coded Mind — Free Developer Tools" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Coded Mind — Free Developer Tools & Data Services",
     description: "Free browser-based developer tools. No login, no data sent.",
-    images: ["/og-image.png"],
   },
   alternates: { canonical: BASE },
   robots: { index: true, follow: true, googleBot: { index: true, follow: true } },

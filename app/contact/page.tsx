@@ -10,6 +10,7 @@ export const metadata: Metadata = {
     "Get in touch with Coded Mind about data engineering, cloud data platforms, dashboards, and automation. Email hr@codedmind.co.in or send us a message — we reply within 1–2 business days.",
   alternates: { canonical: "https://codedmind.co.in/contact" },
   openGraph: {
+    images: ["/opengraph-image"],
     title: "Contact Coded Mind",
     description: "Tell us what you're building. We reply within 1–2 business days.",
     url: "https://codedmind.co.in/contact",

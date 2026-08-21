@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   keywords: ["json formatter", "json validator online", "json beautifier", "json minifier", "format json online", "pretty print json"],
   alternates: { canonical: "https://codedmind.co.in/tools/json-formatter" },
   openGraph: {
+    images: ["/opengraph-image"],
     title: "JSON Formatter & Validator — Free Online Tool",
     description: "Format, validate, and minify JSON in your browser. Instant syntax error detection. Free, no login.",
     url: "https://codedmind.co.in/tools/json-formatter",

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import UuidGeneratorTool from "./UuidGeneratorTool";
+import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
 
 export const metadata: Metadata = {
   title: "UUID Generator — Free Online UUIDv4 Generator",
@@ -68,6 +69,7 @@ const faqSchema = {
 export default function UuidGeneratorPage() {
   return (
     <>
+      <BreadcrumbJsonLd items={[{ name: "Tools", path: "/tools" }, { name: "UUID Generator", path: "/tools/uuid-generator" }]} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}

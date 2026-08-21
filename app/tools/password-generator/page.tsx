@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import PasswordGeneratorTool from "./PasswordGeneratorTool";
+import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
 
 export const metadata: Metadata = {
   title: "Free Password Generator — Strong Random Passwords Online",
@@ -8,6 +9,7 @@ export const metadata: Metadata = {
     "Generate strong, random passwords instantly. Choose length, uppercase, lowercase, numbers, and symbols. Free, runs in your browser — your password is never sent anywhere.",
   alternates: { canonical: "https://codedmind.co.in/tools/password-generator" },
   openGraph: {
+    images: ["/opengraph-image"],
     title: "Free Password Generator — Strong Random Passwords Online",
     description: "Generate secure random passwords in your browser. Customize length and character types. Free, no login, nothing is sent to a server.",
     url: "https://codedmind.co.in/tools/password-generator",
@@ -56,6 +58,7 @@ const faqSchema = {
 export default function PasswordGeneratorPage() {
   return (
     <main className="max-w-xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <BreadcrumbJsonLd items={[{ name: "Tools", path: "/tools" }, { name: "Password Generator", path: "/tools/password-generator" }]} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}

@@ -1,17 +1,32 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
+
 interface ToolShellProps {
   title: string;
   description: string;
   icon: ReactNode;
   children: ReactNode;
   badge?: string;
+  /** Route of this tool, e.g. "/tools/pdf/merge". Emits BreadcrumbList data. */
+  path?: string;
 }
 
-export function ToolShell({ title, description, icon, children, badge }: ToolShellProps) {
+export function ToolShell({ title, description, icon, children, badge, path }: ToolShellProps) {
   return (
     <main className="bg-white min-h-screen">
+      {/* Structured data mirroring the visible breadcrumb below. One place,
+          rather than repeating it in all six PDF tool pages. */}
+      {path && (
+        <BreadcrumbJsonLd
+          items={[
+            { name: "Tools", path: "/tools" },
+            { name: "PDF Tools", path: "/tools/pdf" },
+            { name: title, path },
+          ]}
+        />
+      )}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
 
         {/* Breadcrumb */}

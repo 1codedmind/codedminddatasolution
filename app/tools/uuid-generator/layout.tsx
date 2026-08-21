@@ -15,6 +15,7 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: "https://codedmind.co.in/tools/uuid-generator" },
   openGraph: {
+    images: ["/opengraph-image"],
     title: "UUID Generator — Free Bulk v4 UUID Generator Online",
     description: "Generate up to 100 cryptographically secure UUID v4s at once. Free, no login, no data sent.",
     url: "https://codedmind.co.in/tools/uuid-generator",

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import TimestampTool from "./TimestampTool";
+import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
 
 export const metadata: Metadata = {
   title: "Unix Timestamp Converter — Epoch to Date & Date to Unix Online",
@@ -8,6 +9,7 @@ export const metadata: Metadata = {
     "Convert Unix timestamps to readable dates and back. Free online epoch converter — supports seconds and milliseconds, UTC, ISO 8601, and local time. No login needed.",
   alternates: { canonical: "https://codedmind.co.in/tools/timestamp" },
   openGraph: {
+    images: ["/opengraph-image"],
     title: "Unix Timestamp Converter — Epoch to Date Online",
     description: "Convert Unix/epoch timestamps to UTC, ISO 8601, and local date — or any date to a Unix timestamp. Free, instant, no login.",
     url: "https://codedmind.co.in/tools/timestamp",
@@ -56,6 +58,7 @@ const faqSchema = {
 export default function TimestampPage() {
   return (
     <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <BreadcrumbJsonLd items={[{ name: "Tools", path: "/tools" }, { name: "Timestamp Converter", path: "/tools/timestamp" }]} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}

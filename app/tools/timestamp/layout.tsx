@@ -15,6 +15,7 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: "https://codedmind.co.in/tools/timestamp" },
   openGraph: {
+    images: ["/opengraph-image"],
     title: "Unix Timestamp Converter — Epoch to Date & Time",
     description: "Convert Unix timestamps to human-readable dates and back. Supports milliseconds and seconds. Free.",
     url: "https://codedmind.co.in/tools/timestamp",

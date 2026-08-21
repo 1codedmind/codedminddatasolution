@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Base64Tool from "./Base64Tool";
+import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
 
 export const metadata: Metadata = {
   title: "Base64 Encoder / Decoder — Free Online Tool",
@@ -68,6 +69,7 @@ const faqSchema = {
 export default function Base64Page() {
   return (
     <>
+      <BreadcrumbJsonLd items={[{ name: "Tools", path: "/tools" }, { name: "Base64 Encoder", path: "/tools/base64" }]} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}

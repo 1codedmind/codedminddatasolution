@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import TimezoneConverterTool from "./TimezoneConverterTool";
+import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
 
 export const metadata: Metadata = {
   title: "Timezone Converter — World Clock for 500+ IANA Timezones",
@@ -13,6 +14,7 @@ export const metadata: Metadata = {
 export default function TimezoneConverterPage() {
   return (
     <Suspense>
+      <BreadcrumbJsonLd items={[{ name: "Tools", path: "/tools" }, { name: "Timezone Converter", path: "/tools/timezone-converter" }]} />
       <TimezoneConverterTool />
     </Suspense>
   );

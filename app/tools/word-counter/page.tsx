@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import WordCounterTool from "./WordCounterTool";
+import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
 
 export const metadata: Metadata = {
   title: "Free Online Word Counter — Words, Characters, Readability, Platform Limits & More",
@@ -8,6 +9,7 @@ export const metadata: Metadata = {
     "Count words, characters, sentences, lines, and reading time instantly. Check platform limits for Twitter, SMS, Instagram, and SEO. Find & replace, sort lines, keyword density, Flesch-Kincaid readability and grade level. Free, no login.",
   alternates: { canonical: "https://codedmind.co.in/tools/word-counter" },
   openGraph: {
+    images: ["/opengraph-image"],
     title: "Free Online Word Counter",
     description: "Count words, characters, sentences and reading time in real time. Free, no login required.",
     url: "https://codedmind.co.in/tools/word-counter",
@@ -104,6 +106,7 @@ const faqSchema = {
 export default function WordCounterPage() {
   return (
     <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <BreadcrumbJsonLd items={[{ name: "Tools", path: "/tools" }, { name: "Word Counter", path: "/tools/word-counter" }]} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}

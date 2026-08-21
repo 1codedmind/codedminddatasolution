@@ -5,8 +5,12 @@ import { AlertTriangle, Clock, TrendingUp } from "lucide-react";
 
 import { getTornDeals } from "@/lib/torn/deals";
 import TornDealsTable from "@/components/tools/torn/TornDealsTable";
+import LastFetched from "@/components/tools/torn/LastFetched";
+import VisitorCount from "@/components/tools/torn/VisitorCount";
 import AdSlot from "@/components/ads/AdSlot";
+import { AD_SLOTS } from "@/lib/ads/slots";
 import AdSidebar from "@/components/ads/AdSidebar";
+import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
 
 export const metadata: Metadata = {
   title: "Torn Bazaar Profit Finder — Buy Low, Sell High",
@@ -23,6 +27,7 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: "https://codedmind.co.in/tools/games/torn-profit" },
   openGraph: {
+    images: ["/opengraph-image"],
     title: "Torn Bazaar Profit Finder",
     description:
       "Every Torn item currently listed in a player bazaar below its market value, ranked by profit.",
@@ -30,16 +35,8 @@ export const metadata: Metadata = {
   },
 };
 
-function freshness(seconds: number): string {
-  if (seconds <= 0) return "just now";
-  if (seconds < 60) return `${seconds}s ago`;
-  const mins = Math.floor(seconds / 60);
-  if (mins < 60) return `${mins} min ago`;
-  return `${Math.floor(mins / 60)}h ago`;
-}
-
 async function Deals() {
-  const { deals, ageSeconds, degraded, error } = await getTornDeals();
+  const { deals, generatedAt, degraded, error } = await getTornDeals();
 
   if (error) {
     return (
@@ -59,7 +56,7 @@ async function Deals() {
   return (
     <>
       <p className="mb-4 text-xs text-stone-400">
-        {deals.length.toLocaleString()} profitable items · prices updated {freshness(ageSeconds)}
+        {deals.length.toLocaleString()} profitable items · <LastFetched generatedAt={generatedAt} />
         {degraded && " · item metadata unavailable server-side, add your own API key below for types and vendor prices"}
       </p>
 
@@ -85,13 +82,17 @@ function LoadingSkeleton() {
 export default function TornProfitPage() {
   return (
     <main className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8 xl:max-w-[88rem]">
+      <BreadcrumbJsonLd items={[{ name: "Tools", path: "/tools" }, { name: "Game Tools", path: "/tools/games" }, { name: "Torn Profit Finder", path: "/tools/games/torn-profit" }]} />
       <Link href="/tools/games" className="text-sm text-stone-400 transition hover:text-stone-700">
         ← Game tools
       </Link>
 
       <div className="mb-8 mt-6">
-        <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-          <TrendingUp size={12} /> Live bazaar prices
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+            <TrendingUp size={12} /> Live bazaar prices
+          </span>
+          <VisitorCount />
         </div>
         <h1 className="text-3xl font-extrabold tracking-tight text-stone-950 sm:text-4xl">
           Torn Bazaar Profit Finder
@@ -115,10 +116,10 @@ export default function TornProfitPage() {
 
           {/* Below the data, deliberately. An ad above a dense table is the
               quickest way to lose the visitor before the tool has proved useful. */}
-          <AdSlot slot="1234567890" minHeight={110} className="mt-10" />
+          <AdSlot slot={AD_SLOTS.tornBelowTable} minHeight={110} className="mt-10" />
         </div>
 
-        <AdSidebar slot="1234567892" />
+        <AdSidebar slot={AD_SLOTS.tornSidebar} />
       </div>
     </main>
   );

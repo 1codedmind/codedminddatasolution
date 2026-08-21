@@ -80,6 +80,7 @@ export default function JpgToPDFPage() {
 
   return (
     <ToolShell
+      path="/tools/pdf/jpg-to-pdf"
       title="JPG to PDF"
       description="Convert JPG, PNG, or WebP images into a single PDF document. Supports multiple images."
       icon={<FileImage size={22} />}

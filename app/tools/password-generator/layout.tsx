@@ -14,6 +14,7 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: "https://codedmind.co.in/tools/password-generator" },
   openGraph: {
+    images: ["/opengraph-image"],
     title: "Password Generator — Strong Random Passwords Online",
     description: "Generate strong, random passwords locally in your browser. Custom length and character rules. Free, private.",
     url: "https://codedmind.co.in/tools/password-generator",

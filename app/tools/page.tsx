@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Braces, Lock, Hash, AlignLeft, Clock, KeyRound, Globe, Files, Scissors, RotateCcw, FileImage, Minimize2, ArrowRight, CheckCircle2, PenLine, TrendingUp, Gamepad2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { fadeUp, container } from "@/lib/motion";
+import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
 
 const resumeFeatures = [
   "5 professionally designed templates",
@@ -246,6 +247,7 @@ function ToolCard({ href, icon: Icon, label, description, badge }: { href: strin
 export default function ToolsPage() {
   return (
     <main className="bg-white min-h-screen">
+      <BreadcrumbJsonLd items={[{ name: "Tools", path: "/tools" }]} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
 
         {/* Header */}

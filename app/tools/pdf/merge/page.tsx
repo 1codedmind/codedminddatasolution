@@ -141,6 +141,7 @@ export default function MergePDFPage() {
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <ToolShell
+      path="/tools/pdf/merge"
       title="Merge PDF"
       description="Combine PDF files into one. Drag pages to reorder them before merging."
       icon={<Files size={22} />}

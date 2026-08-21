@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { Bot, CheckCircle2, MessageCircle, Send, X } from "lucide-react";
+import { Bot, CheckCircle2, Send, Sparkles, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 type Message = {
@@ -56,6 +56,18 @@ export default function ChatWidget() {
   const [error,     setError]     = useState<string | null>(null);
   const [streaming, setStreaming] = useState(false);
 
+  /**
+   * A launcher nobody clicks is a launcher that never explains itself. After a
+   * short delay we surface one concrete question the assistant can answer, with
+   * one-tap starters — asking is then a single click rather than "open a box,
+   * think of a question, type it".
+   *
+   * Shown once. Dismissing or opening the chat remembers that in this browser,
+   * so it never nags a returning visitor.
+   */
+  const [teaser, setTeaser] = useState(false);
+  const [pinged, setPinged] = useState(false);
+
   const messagesRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -63,6 +75,34 @@ export default function ChatWidget() {
   useEffect(() => {
     messagesRef.current?.scrollTo({ top: messagesRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, isOpen]);
+
+  // Surface the teaser once per browser, and only after the visitor has had a
+  // moment to look at the page. Never on top of an already-open chat.
+  useEffect(() => {
+    let seen = true;
+    try {
+      seen = window.localStorage.getItem("cm_chat_teaser_seen") === "1";
+    } catch {
+      // Storage blocked — treat as seen so we err toward not interrupting.
+    }
+    if (seen) return;
+
+    const id = setTimeout(() => {
+      setTeaser(true);
+      setPinged(true);
+    }, 7000);
+    return () => clearTimeout(id);
+  }, []);
+
+  function retireTeaser() {
+    setTeaser(false);
+    setPinged(false);
+    try {
+      window.localStorage.setItem("cm_chat_teaser_seen", "1");
+    } catch {
+      /* ignore */
+    }
+  }
 
   // Auto-focus textarea when chat opens
   useEffect(() => {
@@ -345,13 +385,76 @@ export default function ChatWidget() {
       </AnimatePresence>
 
       {/* Toggle button */}
+      {/* Proactive teaser — one concrete question beats a generic invitation */}
+      <AnimatePresence>
+        {teaser && !isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 6, scale: 0.97 }}
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            className="relative w-[17rem] rounded-2xl border border-stone-200 bg-white p-4 shadow-xl shadow-stone-900/10"
+          >
+            <button
+              type="button"
+              onClick={retireTeaser}
+              aria-label="Dismiss"
+              className="absolute right-2.5 top-2.5 rounded-full p-1 text-stone-300 transition hover:bg-stone-100 hover:text-stone-600"
+            >
+              <X size={13} />
+            </button>
+
+            <div className="flex items-start gap-2.5">
+              <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-stone-950">
+                <Bot size={14} className="text-white" />
+              </span>
+              <p className="pr-4 text-sm leading-relaxed text-stone-700">
+                Looking for something? I can answer instantly.
+              </p>
+            </div>
+
+            <div className="mt-3 flex flex-col gap-1.5">
+              {STARTERS.slice(0, 3).map((q) => (
+                <button
+                  key={q}
+                  type="button"
+                  onClick={() => {
+                    retireTeaser();
+                    void sendMessage(q);
+                  }}
+                  className="rounded-lg border border-stone-200 px-3 py-2 text-left text-[13px] leading-snug text-stone-600 transition hover:border-stone-300 hover:bg-stone-50 hover:text-stone-900"
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <motion.button
         type="button"
-        onClick={() => setIsOpen((v) => !v)}
+        onClick={() => {
+          retireTeaser();
+          setIsOpen((v) => !v);
+        }}
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.96 }}
-        className="inline-flex items-center gap-2.5 rounded-full bg-stone-950 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-stone-950/20 hover:bg-stone-800 transition-colors"
+        aria-label={isOpen ? "Close chat" : "Ask a question"}
+        className="relative inline-flex items-center gap-2.5 rounded-full bg-stone-950 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-stone-950/25 transition-colors hover:bg-stone-800"
       >
+        {/* A single attention ring, retired on first interaction — a permanent
+            pulse reads as an advert and gets tuned out. */}
+        {pinged && !isOpen && (
+          <motion.span
+            aria-hidden="true"
+            className="absolute inset-0 rounded-full border-2 border-stone-950"
+            initial={{ opacity: 0.55, scale: 1 }}
+            animate={{ opacity: 0, scale: 1.35 }}
+            transition={{ duration: 1.6, repeat: 2, ease: "easeOut" }}
+          />
+        )}
+
         <AnimatePresence mode="wait" initial={false}>
           <motion.span
             key={isOpen ? "x" : "chat"}
@@ -360,10 +463,10 @@ export default function ChatWidget() {
             exit={{    rotate:  90,  opacity: 0, scale: 0.8 }}
             transition={{ duration: 0.15 }}
           >
-            {isOpen ? <X size={16} /> : <MessageCircle size={16} />}
+            {isOpen ? <X size={16} /> : <Sparkles size={16} />}
           </motion.span>
         </AnimatePresence>
-        {isOpen ? "Close" : "Chat With Us"}
+        {isOpen ? "Close" : "Ask us anything"}
       </motion.button>
     </div>
   );

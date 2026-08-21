@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import JsonFormatterTool from "./JsonFormatterTool";
+import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
 
 export const metadata: Metadata = {
   title: "JSON Formatter & Validator — Free Online Tool",
@@ -68,6 +69,7 @@ const faqSchema = {
 export default function JsonFormatterPage() {
   return (
     <>
+      <BreadcrumbJsonLd items={[{ name: "Tools", path: "/tools" }, { name: "JSON Formatter", path: "/tools/json-formatter" }]} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}

@@ -23,8 +23,14 @@ export type TornDeal = {
 
 export type TornDealsResult = {
   deals: TornDeal[];
-  /** Seconds since the upstream crawler generated this snapshot. */
-  ageSeconds: number;
+  /**
+   * Unix seconds at which the upstream crawler generated this snapshot.
+   *
+   * Absolute rather than a relative age: this value is computed inside a cached
+   * function, so anything derived from "now" freezes at cache time and is wrong
+   * for every later visitor. The age is calculated in the browser instead.
+   */
+  generatedAt: number;
   /** True when the Torn item catalogue was unavailable, so metadata is missing. */
   degraded: boolean;
   error?: string;

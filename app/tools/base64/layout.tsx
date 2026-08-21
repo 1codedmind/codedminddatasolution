@@ -15,6 +15,7 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: "https://codedmind.co.in/tools/base64" },
   openGraph: {
+    images: ["/opengraph-image"],
     title: "Base64 Encoder & Decoder — Free Online Tool",
     description: "Encode or decode Base64 strings instantly in your browser. No data sent. Free.",
     url: "https://codedmind.co.in/tools/base64",

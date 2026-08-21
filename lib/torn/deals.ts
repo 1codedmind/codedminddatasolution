@@ -168,7 +168,7 @@ export async function getTornDeals(): Promise<TornDealsResult> {
   } catch (err) {
     return {
       deals: [],
-      ageSeconds: 0,
+      generatedAt: 0,
       degraded: true,
       error: err instanceof Error ? err.message : "Could not reach the price crawler.",
     };
@@ -214,9 +214,5 @@ export async function getTornDeals(): Promise<TornDealsResult> {
 
   deals.sort((a, b) => b.profit - a.profit);
 
-  const ageSeconds = marketplace.generatedAt
-    ? Math.max(0, Math.floor(Date.now() / 1000) - marketplace.generatedAt)
-    : 0;
-
-  return { deals, ageSeconds, degraded };
+  return { deals, generatedAt: marketplace.generatedAt, degraded };
 }

@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   keywords: ["compress pdf online free", "reduce pdf size", "pdf compressor", "shrink pdf", "pdf file size reducer"],
   alternates: { canonical: "https://codedmind.co.in/tools/pdf/compress" },
   openGraph: {
+    images: ["/opengraph-image"],
     title: "Compress PDF Online Free — Reduce File Size Instantly",
     description: "Shrink PDF size without quality loss. Runs entirely in your browser — files never uploaded to any server.",
     url: "https://codedmind.co.in/tools/pdf/compress",

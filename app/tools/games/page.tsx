@@ -3,6 +3,8 @@ import Link from "next/link";
 import { ArrowRight, TrendingUp, Gamepad2 } from "lucide-react";
 
 import AdSlot from "@/components/ads/AdSlot";
+import { AD_SLOTS } from "@/lib/ads/slots";
+import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
 
 export const metadata: Metadata = {
   title: "Game Tools — Free Calculators & Helpers",
@@ -10,6 +12,7 @@ export const metadata: Metadata = {
     "Free browser-based tools for online games. Torn bazaar profit finder and more. No login, no API key required.",
   alternates: { canonical: "https://codedmind.co.in/tools/games" },
   openGraph: {
+    images: ["/opengraph-image"],
     title: "Game Tools — Coded Mind",
     description: "Free browser-based helpers for online games.",
     url: "https://codedmind.co.in/tools/games",
@@ -31,6 +34,7 @@ const gameTools = [
 export default function GameToolsPage() {
   return (
     <main className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
+      <BreadcrumbJsonLd items={[{ name: "Tools", path: "/tools" }, { name: "Game Tools", path: "/tools/games" }]} />
       <Link href="/tools" className="text-sm text-stone-400 transition hover:text-stone-700">
         ← All tools
       </Link>
@@ -77,7 +81,7 @@ export default function GameToolsPage() {
         ))}
       </div>
 
-      <AdSlot slot="1234567891" minHeight={110} className="mt-10" />
+      <AdSlot slot={AD_SLOTS.gamesIndex} minHeight={110} className="mt-10" />
 
       <p className="mt-10 text-xs leading-relaxed text-stone-400">
         Coded Mind is not affiliated with, endorsed by, or sponsored by any game

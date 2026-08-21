@@ -8,6 +8,7 @@ export const metadata: Metadata = {
     "Coded Mind builds data engineering, full-stack software, and AI solutions — and publishes a set of free browser-based developer tools. Who we are, what we build, and why the tools are free.",
   alternates: { canonical: "https://codedmind.co.in/about" },
   openGraph: {
+    images: ["/opengraph-image"],
     title: "About Coded Mind",
     description:
       "A technology company building data platforms, software, and AI — and giving away the tools we built for ourselves.",

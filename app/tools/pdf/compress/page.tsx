@@ -12,6 +12,7 @@ import { ToolShell } from "@/components/pdf/ToolShell";
 export default function CompressPDFPage() {
   return (
     <ToolShell
+      path="/tools/pdf/compress"
       title="Compress PDF"
       description="Reduce PDF file size significantly using server-side Ghostscript."
       icon={<Minimize2 size={22} />}
