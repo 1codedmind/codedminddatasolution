@@ -2,15 +2,15 @@
 
 import { useEffect, useRef } from "react";
 
-import { useConsent } from "@/components/CookieConsent";
-
 /**
  * A single AdSense unit.
  *
- * Gated on the same consent the analytics script uses: no consent, no ad script,
- * no request to Google. It also renders nothing until a publisher ID is
- * configured, so slots can be placed now and stay dormant until AdSense
- * approval comes through.
+ * Renders nothing until a publisher ID is configured, so slots can be placed
+ * now and stay dormant until AdSense approval comes through.
+ *
+ * Not gated on our cookie banner — see AdSenseScript for why: the verifier has
+ * to find ad markup, and EEA consent is handled by Google's own CMP rather
+ * than by hiding the units.
  *
  * Reserves its height up front. Ads that appear and shove the page down are the
  * fastest way to make a useful tool feel cheap, and they wreck Core Web Vitals —
@@ -28,10 +28,10 @@ type Props = {
 };
 
 export default function AdSlot({ slot, minHeight = 100, format = "auto", className = "" }: Props) {
-  const { consent } = useConsent();
   const pushed = useRef(false);
 
-  const active = Boolean(CLIENT_ID) && consent === "accepted";
+  // A blank slot id means the unit has not been created in AdSense yet.
+  const active = Boolean(CLIENT_ID) && Boolean(slot);
 
   useEffect(() => {
     if (!active || pushed.current) return;

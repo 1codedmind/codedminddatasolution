@@ -1,18 +1,24 @@
 /**
  * AdSense ad unit IDs, in one place.
  *
- * Every slot below is a placeholder until AdSense approves the site. Create the
- * matching unit in the AdSense dashboard, paste its ID here, and every page
- * using it updates at once — no hunting through page files.
+ * EMPTY MEANS DORMANT. An <ins> tag pointing at a slot ID that does not exist
+ * in your account requests a unit Google cannot fill, which logs errors and
+ * serves nothing — worse than showing no unit at all. So AdSlot renders
+ * nothing while its ID is blank.
  *
- * Nothing renders at all while NEXT_PUBLIC_ADSENSE_CLIENT is unset, so leaving
- * these as placeholders is safe.
+ * To switch a placement on: AdSense dashboard → Ads → By ad unit → create the
+ * unit, copy its data-ad-slot number, and paste it here. Every page using that
+ * slot picks it up at once.
+ *
+ * Auto ads do not need any of these. Google places those itself using only the
+ * site-wide script in AdSenseScript, so leaving this file empty is a perfectly
+ * valid steady state.
  */
 export const AD_SLOTS = {
   /** Horizontal unit under the Torn deals table. */
-  tornBelowTable: "1234567890",
+  tornBelowTable: "",
   /** Horizontal unit on the game tools index. */
-  gamesIndex: "1234567891",
+  gamesIndex: "",
   /** Sticky 160px vertical rail, wide screens only. */
-  tornSidebar: "1234567892",
+  tornSidebar: "",
 } as const;

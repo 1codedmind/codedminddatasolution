@@ -6,6 +6,7 @@ import Solutions from "@/sections/Solutions";
 import ToolsSection from "@/sections/Tools";
 import Enhanced3DResumeSpotlight from "@/components/landing/Enhanced3DResumeSpotlight";
 import ExamPortalSpotlight from "@/sections/ExamPortalSpotlight";
+import TrainingSpotlight from "@/sections/TrainingSpotlight";
 import WhyUs from "@/sections/WhyUs";
 import Process from "@/sections/Process";
 import CTA from "@/sections/CTA";
@@ -23,6 +24,8 @@ export default function Enhanced3DLanding() {
       <Solutions />
       {/* 4.5 Exam portal — assessments for universities & corporate */}
       <ExamPortalSpotlight />
+      {/* 4.6 Training — data science, data engineering & AI */}
+      <TrainingSpotlight />
       {/* 5. Free developer tools (12 tools) */}
       <ToolsSection />
       {/* 6. Trust, process, CTA */}

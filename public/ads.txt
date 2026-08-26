@@ -1,3 +1,2 @@
-# AdSense verification. Replace pub-0000000000000000 with your real publisher ID
-# once AdSense approves the site, or Google will not serve ads.
-google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0
+# AdSense verification. Must be reachable at https://codedmind.co.in/ads.txt
+google.com, pub-1506631973215398, DIRECT, f08c47fec0942fa0
