@@ -169,7 +169,16 @@ export default function ResumeUpload() {
     setUsedFallback(false);
     try {
       const text = await extractTextFromPDF(selectedFile);
-      if (!text.trim()) { setError("No readable text in this PDF. It may be a scanned image."); return; }
+      // A PDF with no extractable text is almost always a rasterised page —
+      // a scan, or an "export as image" from a resume site. Saying only that
+      // it is unreadable leaves the visitor stuck, so name the likely cause
+      // and give them both ways out.
+      if (!text.trim()) {
+        setError(
+          "This PDF is an image of a resume, so there is no text to read from it. Re-export it as a text PDF — in Word or Google Docs, File → Download → PDF — or just fill in the editor below by hand.",
+        );
+        return;
+      }
       try {
         setExtractedData(await parseResumeWithAI(text));
       } catch (err: any) {
