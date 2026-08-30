@@ -1,183 +1,188 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
-import { Copy, Check, Trash2, ChevronDown, ChevronUp, Download, Search } from "lucide-react";
+import { useState, useMemo, useCallback, useEffect, useSyncExternalStore } from "react";
+import {
+  Copy, Check, Trash2, Download, Search, Save, RotateCcw, AlertTriangle, Sparkles,
+  CaseUpper, CaseLower, CaseSensitive, Pilcrow, Eraser, ListX, CopyMinus, ShieldAlert,
+  ArrowDownAZ, ArrowUpAZ, ArrowLeftRight, SlidersHorizontal, X, Target,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
-// Common profanity list for abuse-free check (censored in source for safety)
-const PROFANITY = new Set([
-  "fuck","fucking","fucked","fucker","fucks","fuckin",
-  "shit","shitting","shitty","shits","bullshit",
-  "ass","asshole","assholes","asses",
-  "bitch","bitches","bitching","bitchy",
-  "bastard","bastards",
-  "damn","damned","dammit",
-  "crap","crappy","crap",
-  "dick","dicks","dickhead",
-  "cock","cocks","cocksucker",
-  "cunt","cunts",
-  "whore","whores",
-  "slut","sluts",
-  "piss","pissed","pissing",
-  "prick","pricks",
-  "nigger","niggers","nigga",
-  "faggot","faggots","fag","fags",
-  "retard","retarded","retards",
-  "idiot","idiots","moron","morons","imbecile",
-  "stupid","dumbass","dumb",
-  "hate","hater","haters",
-  "kill","killing","murder",
-  "rape","raped","raping","rapist",
-  "porn","porno",
-  "sex","sexy","sexual",
-  "nude","naked","nudity",
-]);
+import { analyse, censorWord, formatDuration } from "@/lib/tools/textStats";
+import { PLATFORMS, measureFor, countGraphemes, smsInfo } from "@/lib/tools/platformLimits";
+import { audienceById, judge } from "@/lib/tools/audiences";
+import { styleReport, analyseFocusKeyword } from "@/lib/tools/writingChecks";
+import SocialPreview from "@/components/tools/SocialPreview";
+import WordCounterFilters, {
+  DEFAULT_SETTINGS,
+  type Settings,
+} from "@/components/tools/WordCounterFilters";
 
-function censorWord(word: string): string {
-  const core = word.replace(/[^a-zA-Z]/g, "");
-  if (PROFANITY.has(core.toLowerCase())) {
-    return word.replace(core, core[0] + "*".repeat(core.length - 1));
-  }
-  return word;
-}
+const STORAGE_TEXT = "cm_wc_text";
+const STORAGE_SETTINGS = "cm_wc_settings";
 
-const STOP_WORDS = new Set([
-  "a","an","the","and","or","but","in","on","at","to","for","of","with",
-  "by","from","is","are","was","were","be","been","being","have","has",
-  "had","do","does","did","will","would","could","should","may","might",
-  "shall","can","this","that","these","those","it","its","i","you","he",
-  "she","we","they","me","him","her","us","them","my","your","his","our",
-  "their","who","what","which","when","where","why","how","all","any",
-  "both","each","few","more","most","other","some","such","no","not",
-  "only","own","same","so","than","too","very","just","as","if","then",
-  "about","also","into","up","out","there","here","now","like","one",
-  "two","get","got","s","t","re","ve","ll","d","m","n","even","still",
-]);
-
-function countSyllables(word: string): number {
-  const w = word.toLowerCase().replace(/[^a-z]/g, "");
-  if (!w) return 0;
-  if (w.length <= 3) return 1;
-  const cleaned = w.replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/, "").replace(/^y/, "");
-  const matches = cleaned.match(/[aeiouy]{1,2}/g);
-  return Math.max(1, matches ? matches.length : 1);
-}
-
-function readabilityInfo(score: number) {
-  if (score >= 90) return { label: "Very Easy",  color: "text-emerald-600", bg: "bg-emerald-50",  border: "border-emerald-200" };
-  if (score >= 80) return { label: "Easy",        color: "text-green-600",   bg: "bg-green-50",    border: "border-green-200" };
-  if (score >= 70) return { label: "Fairly Easy", color: "text-lime-600",    bg: "bg-lime-50",     border: "border-lime-200" };
-  if (score >= 60) return { label: "Standard",    color: "text-amber-600",   bg: "bg-amber-50",    border: "border-amber-200" };
-  if (score >= 50) return { label: "Fairly Hard", color: "text-orange-500",  bg: "bg-orange-50",   border: "border-orange-200" };
-  if (score >= 30) return { label: "Difficult",   color: "text-red-500",     bg: "bg-red-50",      border: "border-red-200" };
-  return              { label: "Very Hard",   color: "text-red-700",     bg: "bg-red-50",      border: "border-red-300" };
-}
-
-const PLATFORM_LIMITS = [
-  { name: "Twitter / X",       limit: 280   },
-  { name: "SMS",                limit: 160   },
-  { name: "Instagram bio",      limit: 150   },
-  { name: "YouTube title",      limit: 100   },
-  { name: "SEO title tag",      limit: 60    },
-  { name: "Email subject",      limit: 78    },
-  { name: "Meta description",   limit: 155   },
-  { name: "LinkedIn post",      limit: 3000  },
+/**
+ * Transform actions.
+ *
+ * Each carries an icon: a row of text-only buttons reads as a wall of jargon,
+ * whereas the glyph tells you what the button does before you read the label.
+ */
+const TRANSFORMS: { group: string; items: { label: string; title: string; Icon: LucideIcon; fn: (s: string) => string }[] }[] = [
+  {
+    group: "Case",
+    items: [
+      { label: "UPPER", title: "UPPERCASE", Icon: CaseUpper, fn: (s) => s.toUpperCase() },
+      { label: "lower", title: "lowercase", Icon: CaseLower, fn: (s) => s.toLowerCase() },
+      { label: "Title", title: "Title Case", Icon: CaseSensitive, fn: (s) => s.replace(/\w\S*/g, (t) => t[0].toUpperCase() + t.slice(1).toLowerCase()) },
+      { label: "Sentence", title: "Sentence case", Icon: Pilcrow, fn: (s) => s.toLowerCase().replace(/(^\s*\w|[.!?]\s+\w)/g, (c) => c.toUpperCase()) },
+    ],
+  },
+  {
+    group: "Clean",
+    items: [
+      { label: "Fix spaces", title: "Collapse repeated spaces and blank lines", Icon: Eraser, fn: (s) => s.replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim() },
+      { label: "No empties", title: "Remove empty lines", Icon: ListX, fn: (s) => s.split("\n").filter((l) => l.trim()).join("\n") },
+      { label: "No dupes", title: "Remove duplicate lines", Icon: CopyMinus, fn: (s) => [...new Set(s.split("\n"))].join("\n") },
+      { label: "Censor", title: "Mask profanity", Icon: ShieldAlert, fn: (s) => s.replace(/\b[\w']+\b/g, censorWord) },
+    ],
+  },
+  {
+    group: "Order",
+    items: [
+      { label: "A–Z", title: "Sort lines A to Z", Icon: ArrowDownAZ, fn: (s) => s.split("\n").sort((a, b) => a.localeCompare(b)).join("\n") },
+      { label: "Z–A", title: "Sort lines Z to A", Icon: ArrowUpAZ, fn: (s) => s.split("\n").sort((a, b) => b.localeCompare(a)).join("\n") },
+      { label: "Reverse", title: "Reverse word order", Icon: ArrowLeftRight, fn: (s) => s.split(/\s+/).reverse().join(" ") },
+    ],
+  },
 ];
 
 function escRe(s: string) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-const TRANSFORM_BUTTONS = [
-  { label: "ABC",         title: "UPPERCASE",              fn: (s: string) => s.toUpperCase() },
-  { label: "abc",         title: "lowercase",              fn: (s: string) => s.toLowerCase() },
-  { label: "Abc",         title: "Title Case",             fn: (s: string) => s.replace(/\w\S*/g, (t) => t.charAt(0).toUpperCase() + t.slice(1).toLowerCase()) },
-  { label: "A·",          title: "Sentence case",          fn: (s: string) => s.toLowerCase().replace(/(^\s*\w|[.!?]\s+\w)/g, (c) => c.toUpperCase()) },
-  { label: "Fix spaces",  title: "Remove extra spaces",    fn: (s: string) => s.replace(/ +/g, " ").replace(/\n{3,}/g, "\n\n").trim() },
-  { label: "↑ Sort A–Z", title: "Sort lines A to Z",      fn: (s: string) => s.split("\n").sort((a, b) => a.localeCompare(b)).join("\n") },
-  { label: "↓ Sort Z–A", title: "Sort lines Z to A",      fn: (s: string) => s.split("\n").sort((a, b) => b.localeCompare(a)).join("\n") },
-  { label: "◌ Empties",  title: "Remove empty lines",     fn: (s: string) => s.split("\n").filter((l) => l.trim()).join("\n") },
-  { label: "◌ Dupes",    title: "Remove duplicate lines", fn: (s: string) => [...new Set(s.split("\n"))].join("\n") },
-  { label: "⇄ Reverse",  title: "Reverse words",          fn: (s: string) => s.split(/\s+/).reverse().join(" ") },
-  { label: "⊘ Censor",   title: "Censor abusive words",   fn: (s: string) => s.replace(/\b\w+\b/g, censorWord) },
-];
+function readStored(key: string): string | null {
+  if (typeof window === "undefined") return null;
+  try { return window.localStorage.getItem(key); } catch { return null; }
+}
+
+function loadSettings(): Settings {
+  const raw = readStored(STORAGE_SETTINGS);
+  if (!raw) return DEFAULT_SETTINGS;
+  try { return { ...DEFAULT_SETTINGS, ...(JSON.parse(raw) as Partial<Settings>) }; }
+  catch { return DEFAULT_SETTINGS; }
+}
+
+/**
+ * `false` while server-rendering and during hydration, `true` afterwards, so
+ * stored state can seed useState without a hydration mismatch.
+ */
+const subscribeNever = () => () => {};
+function useHydrated() {
+  return useSyncExternalStore(subscribeNever, () => true, () => false);
+}
+
+const VERDICT_TONE = {
+  "on-target": { text: "text-emerald-700", bg: "bg-emerald-50", border: "border-emerald-200", marker: "bg-emerald-600" },
+  "too-simple": { text: "text-blue-700", bg: "bg-blue-50", border: "border-blue-200", marker: "bg-blue-600" },
+  "too-complex": { text: "text-amber-700", bg: "bg-amber-50", border: "border-amber-200", marker: "bg-amber-600" },
+  unknown: { text: "text-stone-500", bg: "bg-stone-50", border: "border-stone-200", marker: "bg-stone-400" },
+} as const;
+
+function GoalRing({ pct }: { pct: number }) {
+  const r = 26;
+  const c = 2 * Math.PI * r;
+  return (
+    <svg width="64" height="64" viewBox="0 0 64 64" className="shrink-0 -rotate-90">
+      <circle cx="32" cy="32" r={r} fill="none" stroke="currentColor" strokeWidth="5" className="text-stone-100" />
+      <circle
+        cx="32" cy="32" r={r} fill="none" strokeWidth="5" strokeLinecap="round" stroke="currentColor"
+        className={pct >= 100 ? "text-emerald-500" : "text-amber-500"}
+        strokeDasharray={c}
+        strokeDashoffset={c - (Math.min(100, pct) / 100) * c}
+        style={{ transition: "stroke-dashoffset 400ms ease" }}
+      />
+    </svg>
+  );
+}
+
+type Tab = "keywords" | "phrases" | "sentences" | "style";
 
 export default function WordCounterTool() {
-  const [text, setText] = useState("");
+  const [text, setText] = useState(() => readStored(STORAGE_TEXT) ?? "");
+  const [settings, setSettings] = useState<Settings>(loadSettings);
   const [copied, setCopied] = useState(false);
+  const [tab, setTab] = useState<Tab>("keywords");
   const [showAllKeywords, setShowAllKeywords] = useState(false);
-  const [showPlatforms, setShowPlatforms] = useState(false);
   const [showFindReplace, setShowFindReplace] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [findText, setFindText] = useState("");
   const [replaceText, setReplaceText] = useState("");
   const [matchCase, setMatchCase] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [badgeVisible, setBadgeVisible] = useState(true);
 
-  const stats = useMemo(() => {
-    const trimmed = text.trim();
-    if (!trimmed) return null;
+  const hydrated = useHydrated();
+  const [hadStoredDraft] = useState(() => Boolean(readStored(STORAGE_TEXT)));
 
-    const wordList = trimmed.split(/\s+/).filter(Boolean);
-    const words = wordList.length;
-    const lines = text.split("\n").length;
-    const sentences = trimmed.split(/[.!?]+/).filter((s) => s.trim().length > 0).length;
-    const paragraphs = text.split(/\n\s*\n/).filter((p) => p.trim().length > 0).length;
-    const syllables = wordList.reduce((sum, w) => sum + countSyllables(w), 0);
+  const display = hydrated ? text : "";
+  const restored = hydrated && hadStoredDraft;
 
-    const cleanWords = wordList.map((w) => w.toLowerCase().replace(/[^a-z]/g, "")).filter(Boolean);
-    const uniqueWords = new Set(cleanWords).size;
-    const avgSentenceLen = sentences > 0 ? Math.round(words / sentences) : 0;
-    const avgWordLen = cleanWords.length > 0
-      ? (cleanWords.reduce((s, w) => s + w.length, 0) / cleanWords.length).toFixed(1)
-      : "0";
-    const longestWord = cleanWords.reduce((a, b) => a.length >= b.length ? a : b, "");
+  const audience = audienceById(settings.audienceId);
+  const options = useMemo(
+    () => ({
+      wpm: settings.wpmOverride ?? audience.wpm,
+      sentenceLimit: audience.sentenceLimit,
+      minKeywordLength: settings.minKeywordLength,
+      includeStopWords: settings.includeStopWords,
+    }),
+    [settings.wpmOverride, settings.minKeywordLength, settings.includeStopWords, audience],
+  );
 
-    const readingMin = Math.ceil(words / 200);
-    const speakMin = Math.ceil(words / 130);
-    const pages = (words / 300).toFixed(1);
+  const stats = useMemo(() => analyse(display, options), [display, options]);
+  const graphemes = useMemo(() => countGraphemes(display), [display]);
+  const sms = useMemo(() => smsInfo(display), [display]);
+  const style = useMemo(() => styleReport(display), [display]);
+  const focus = useMemo(
+    () => analyseFocusKeyword(display, settings.focusKeyword, stats?.words ?? 0),
+    [display, settings.focusKeyword, stats?.words],
+  );
+  const verdict = stats ? judge(stats.grade, stats.fkScore, audience, stats.words) : null;
 
-    // Flesch-Kincaid Reading Ease
-    const fkRaw = sentences > 0 ? 206.835 - 1.015 * (words / sentences) - 84.6 * (syllables / words) : 0;
-    const fkScore = Math.round(Math.max(0, Math.min(100, fkRaw)));
-    const readability = readabilityInfo(fkScore);
+  // Autosave, debounced — the reason someone returns tomorrow.
+  useEffect(() => {
+    if (!hydrated) return;
+    const id = setTimeout(() => {
+      try {
+        if (text) window.localStorage.setItem(STORAGE_TEXT, text);
+        else window.localStorage.removeItem(STORAGE_TEXT);
+        setSaved(true);
+      } catch { /* ignore */ }
+    }, 600);
+    return () => clearTimeout(id);
+  }, [text, hydrated]);
 
-    // FK Grade Level
-    const gradeRaw = sentences > 0 ? 0.39 * (words / sentences) + 11.8 * (syllables / words) - 15.59 : 0;
-    const grade = Math.max(1, Math.round(gradeRaw * 10) / 10);
+  useEffect(() => {
+    if (!hydrated) return;
+    try { window.localStorage.setItem(STORAGE_SETTINGS, JSON.stringify(settings)); } catch { /* ignore */ }
+  }, [settings, hydrated]);
 
-    // Profanity check
-    const abuseWords = wordList.filter((w) => PROFANITY.has(w.toLowerCase().replace(/[^a-z]/g, "")));
-    const abuseCount = abuseWords.length;
+  useEffect(() => {
+    if (!restored) return;
+    const id = setTimeout(() => setBadgeVisible(false), 5000);
+    return () => clearTimeout(id);
+  }, [restored]);
 
-    // Keyword frequency
-    const freq: Record<string, number> = {};
-    wordList.forEach((w) => {
-      const clean = w.toLowerCase().replace(/[^a-z']/g, "").replace(/^'+|'+$/g, "");
-      if (clean.length > 2 && !STOP_WORDS.has(clean)) {
-        freq[clean] = (freq[clean] || 0) + 1;
-      }
-    });
-    const maxFreq = Math.max(1, ...Object.values(freq));
-    const keywords = Object.entries(freq)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 20)
-      .map(([word, count]) => ({
-        word, count,
-        pct: ((count / words) * 100).toFixed(1),
-        barWidth: Math.round((count / maxFreq) * 100),
-      }));
-
-    return {
-      words, chars: text.length, charsNoSpaces: text.replace(/\s/g, "").length,
-      sentences, paragraphs, lines, uniqueWords, avgSentenceLen, avgWordLen, longestWord,
-      readingMin, speakMin, pages, fkScore, readability, grade, abuseCount, keywords,
-    };
-  }, [text]);
+  useEffect(() => {
+    if (!saved) return;
+    const id = setTimeout(() => setSaved(false), 1800);
+    return () => clearTimeout(id);
+  }, [saved]);
 
   const matchCount = useMemo(() => {
-    if (!findText || !text) return 0;
-    try {
-      return (text.match(new RegExp(escRe(findText), matchCase ? "g" : "gi")) || []).length;
-    } catch { return 0; }
-  }, [text, findText, matchCase]);
+    if (!findText || !display) return 0;
+    try { return (display.match(new RegExp(escRe(findText), matchCase ? "g" : "gi")) || []).length; }
+    catch { return 0; }
+  }, [display, findText, matchCase]);
 
   const handleCopy = useCallback(() => {
     if (!text) return;
@@ -197,277 +202,560 @@ export default function WordCounterTool() {
     URL.revokeObjectURL(url);
   }, [text]);
 
-  function handleReplaceFirst() {
-    if (!findText) return;
-    try { setText(text.replace(new RegExp(escRe(findText), matchCase ? "" : "i"), replaceText)); } catch { /* noop */ }
-  }
-
   function handleReplaceAll() {
     if (!findText) return;
-    try { setText(text.replace(new RegExp(escRe(findText), matchCase ? "g" : "gi"), replaceText)); } catch { /* noop */ }
+    try { setText(text.replace(new RegExp(escRe(findText), matchCase ? "g" : "gi"), replaceText)); }
+    catch { /* noop */ }
   }
 
-  const displayedKeywords = showAllKeywords ? stats?.keywords : stats?.keywords.slice(0, 10);
+  const words = stats?.words ?? 0;
+  const goalPct = settings.goal > 0 ? Math.round((words / settings.goal) * 100) : 0;
+  const tone = verdict ? VERDICT_TONE[verdict.status] : null;
+
+  // Target band, drawn with one band-width of headroom either side.
+  const [gLo, gHi] = audience.grade;
+  const span = Math.max(1, gHi - gLo);
+  const bandMin = gLo - span;
+  const bandMax = gHi + span;
+  const toPct = (v: number) => Math.max(0, Math.min(100, ((v - bandMin) / (bandMax - bandMin)) * 100));
 
   return (
-    <div className="space-y-4">
+    <div className="lg:grid lg:grid-cols-[16rem_minmax(0,1fr)] lg:items-start lg:gap-6 xl:grid-cols-[17rem_minmax(0,1fr)] xl:gap-8">
 
-      {/* ── Toolbar ──────────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center gap-1.5">
-        <span className="text-xs text-stone-400 mr-1 shrink-0">Transform:</span>
-        {TRANSFORM_BUTTONS.map(({ label, title, fn }) => (
-          <button
-            key={title}
-            onClick={() => setText((prev) => fn(prev))}
-            title={title}
-            disabled={!text}
-            className="px-2.5 py-1 text-xs font-semibold bg-white border border-stone-200 text-stone-600 rounded-lg hover:bg-stone-50 hover:border-stone-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-          >
-            {label}
-          </button>
-        ))}
-        <div className="ml-auto flex gap-1.5 flex-wrap justify-end">
+      {/* ── Filter rail ──────────────────────────────────────────────────── */}
+      <aside className="mb-4 lg:mb-0 lg:sticky lg:top-24">
+        <button
+          onClick={() => setFiltersOpen((v) => !v)}
+          className="mb-2 flex w-full items-center justify-between rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm font-semibold text-stone-700 lg:hidden"
+        >
+          <span className="flex items-center gap-2">
+            <SlidersHorizontal size={15} className="text-blue-600" />
+            Filters · {audience.name}
+          </span>
+          {filtersOpen ? <X size={15} /> : <span className="text-xs text-stone-400">Change</span>}
+        </button>
+        <div className={filtersOpen ? "block" : "hidden lg:block"}>
+          <WordCounterFilters settings={settings} onChange={setSettings} />
+        </div>
+      </aside>
+
+      <div className="min-w-0 space-y-4">
+
+        {/* ── Hero stats ─────────────────────────────────────────────────── */}
+        <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+          <div className="flex items-center gap-3 rounded-2xl border border-stone-200 bg-white p-4 sm:gap-4 sm:p-5">
+            {settings.goal > 0 && (
+              <div className="relative">
+                <GoalRing pct={goalPct} />
+                <span className="absolute inset-0 flex items-center justify-center text-[11px] font-bold tabular-nums text-stone-500">
+                  {Math.min(999, goalPct)}%
+                </span>
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="text-3xl font-extrabold leading-none tabular-nums text-stone-950 sm:text-4xl">
+                {words.toLocaleString()}
+              </p>
+              <p className="mt-1.5 flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-stone-400">
+                {settings.goal > 0 ? (
+                  <><Target size={11} /> of {settings.goal.toLocaleString()}</>
+                ) : "Words"}
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-5">
+            <p className="text-3xl font-extrabold leading-none tabular-nums text-stone-950 sm:text-4xl">
+              {graphemes.toLocaleString()}
+            </p>
+            <p className="mt-1.5 text-xs font-semibold uppercase tracking-wide text-stone-400">Characters</p>
+            <p className="mt-0.5 text-[11px] tabular-nums text-stone-400">
+              {(stats?.charsNoSpaces ?? 0).toLocaleString()} without spaces
+              {stats && stats.chars !== graphemes && <> · {stats.chars.toLocaleString()} UTF-16</>}
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-5">
+            <p className="text-2xl font-extrabold leading-none text-stone-950 sm:text-4xl">
+              {stats ? formatDuration(stats.readingSec) : "0 sec"}
+            </p>
+            <p className="mt-1.5 text-xs font-semibold uppercase tracking-wide text-stone-400">Reading time</p>
+            <p className="mt-0.5 text-[11px] text-stone-400">
+              at {options.wpm} wpm · {stats ? formatDuration(stats.speakSec) : "0 sec"} aloud
+            </p>
+          </div>
+
+          {/* Readability judged against the chosen audience, not an absolute. */}
+          <div className={`rounded-2xl border p-4 sm:p-5 ${tone ? `${tone.bg} ${tone.border}` : "border-stone-200 bg-white"}`}>
+            <p className={`text-xl font-extrabold leading-tight ${tone ? tone.text : "text-stone-300"}`}>
+              {verdict ? verdict.label : "—"}
+            </p>
+            <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-stone-400">
+              for {audience.name}
+            </p>
+            {stats && verdict?.status !== "unknown" && (
+              <div className="mt-3">
+                <div className="relative h-2 rounded-full bg-white/70 ring-1 ring-inset ring-stone-200">
+                  <span
+                    className="absolute h-full rounded-full bg-emerald-200"
+                    style={{ left: `${toPct(gLo)}%`, width: `${toPct(gHi) - toPct(gLo)}%` }}
+                  />
+                  <span
+                    className={`absolute -top-0.5 h-3 w-1.5 rounded-sm ${tone?.marker ?? "bg-stone-900"}`}
+                    style={{ left: `calc(${toPct(stats.grade)}% - 3px)` }}
+                  />
+                </div>
+                <div className="mt-1.5 flex justify-between text-[10px] tabular-nums text-stone-400">
+                  <span>grade {gLo}</span>
+                  <span className="font-bold text-stone-600">you: {stats.grade}{stats.gradeCapped ? "+" : ""}</span>
+                  <span>{gHi}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {verdict && tone && (
+          <p className={`rounded-xl border px-4 py-3 text-xs leading-relaxed ${tone.bg} ${tone.border} ${tone.text}`}>
+            {verdict.advice}
+          </p>
+        )}
+
+        {/* ── Toolbar ────────────────────────────────────────────────────── */}
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => setShowFindReplace((v) => !v)}
-            className={`flex items-center gap-1.5 px-3 py-1 text-xs font-semibold border rounded-lg transition-colors ${
-              showFindReplace
-                ? "bg-amber-50 border-amber-300 text-amber-700"
-                : "bg-white border-stone-200 text-stone-600 hover:bg-stone-50"
+            className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${
+              showFindReplace ? "border-amber-300 bg-amber-50 text-amber-700" : "border-stone-200 bg-white text-stone-600 hover:bg-stone-50"
             }`}
           >
-            <Search size={12} />
-            Find &amp; Replace
+            <Search size={13} /> Find &amp; replace
           </button>
-          <button
-            onClick={handleCopy}
-            disabled={!text}
-            className="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold bg-white border border-stone-200 text-stone-600 rounded-lg hover:bg-stone-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-          >
-            {copied ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} />}
-            {copied ? "Copied!" : "Copy"}
-          </button>
-          <button
-            onClick={handleDownload}
-            disabled={!text}
-            className="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold bg-white border border-stone-200 text-stone-600 rounded-lg hover:bg-stone-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-          >
-            <Download size={12} />
-            Download
-          </button>
-          <button
-            onClick={() => setText("")}
-            disabled={!text}
-            className="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold bg-white border border-stone-200 text-stone-500 rounded-lg hover:bg-red-50 hover:text-red-600 hover:border-red-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-          >
-            <Trash2 size={12} />
-            Clear
-          </button>
-        </div>
-      </div>
 
-      {/* ── Find & Replace ───────────────────────────────────────────────── */}
-      {showFindReplace && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <input
-              type="text"
-              placeholder="Find…"
-              value={findText}
-              onChange={(e) => setFindText(e.target.value)}
-              className="flex-1 min-w-32 px-3 py-1.5 text-sm border border-stone-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-amber-400 focus:border-amber-400 bg-white"
-            />
-            <input
-              type="text"
-              placeholder="Replace with…"
-              value={replaceText}
-              onChange={(e) => setReplaceText(e.target.value)}
-              className="flex-1 min-w-32 px-3 py-1.5 text-sm border border-stone-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-amber-400 focus:border-amber-400 bg-white"
-            />
-            <label className="flex items-center gap-1.5 text-xs text-stone-600 cursor-pointer whitespace-nowrap select-none">
-              <input type="checkbox" checked={matchCase} onChange={(e) => setMatchCase(e.target.checked)} className="rounded" />
-              Match case
-            </label>
-            <button
-              onClick={handleReplaceFirst}
-              disabled={!findText || !text}
-              className="px-3 py-1.5 text-xs font-semibold bg-white border border-stone-300 text-stone-700 rounded-lg hover:bg-stone-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
-            >
-              Replace first
+          <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
+            <span className="flex items-center gap-1.5 text-[11px] text-stone-400">
+              {saved ? <><Check size={12} className="text-emerald-500" /> Saved</> : <><Save size={12} /> Saves in this browser</>}
+            </span>
+            <button onClick={handleCopy} disabled={!display}
+              className="flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-xs font-semibold text-stone-600 transition-colors hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-40">
+              {copied ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} />}
+              {copied ? "Copied" : "Copy"}
+            </button>
+            <button onClick={handleDownload} disabled={!display}
+              className="flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-xs font-semibold text-stone-600 transition-colors hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-40">
+              <Download size={13} /> Save .txt
             </button>
             <button
-              onClick={handleReplaceAll}
-              disabled={!findText || !text}
-              className="px-3 py-1.5 text-xs font-semibold bg-amber-500 text-white rounded-lg hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
-            >
-              Replace all
+              onClick={() => { if (text && confirm("Clear all text? This cannot be undone.")) setText(""); }}
+              disabled={!display}
+              className="flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-xs font-semibold text-stone-500 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40">
+              <Trash2 size={13} /> Clear
             </button>
-            {findText && (
-              <span className="text-xs text-stone-500 whitespace-nowrap">
-                {matchCount === 0 ? "No matches" : `${matchCount} match${matchCount !== 1 ? "es" : ""}`}
-              </span>
-            )}
           </div>
         </div>
-      )}
 
-      {/* ── Textarea ─────────────────────────────────────────────────────── */}
-      <textarea
-        className="w-full h-72 p-5 text-base text-stone-800 bg-white border border-stone-200 rounded-xl resize-none focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 leading-relaxed"
-        placeholder="Start typing or paste your text here…"
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-      />
-
-      {/* ── Stats ────────────────────────────────────────────────────────── */}
-      {stats ? (
-        <>
-          {/* Primary 6 */}
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5">
-            {[
-              { label: "Words",      value: stats.words.toLocaleString() },
-              { label: "Characters", value: stats.chars.toLocaleString() },
-              { label: "No Spaces",  value: stats.charsNoSpaces.toLocaleString() },
-              { label: "Sentences",  value: stats.sentences.toLocaleString() },
-              { label: "Paragraphs", value: stats.paragraphs.toLocaleString() },
-              { label: "Lines",      value: stats.lines.toLocaleString() },
-            ].map(({ label, value }) => (
-              <div key={label} className="bg-white border border-stone-200 rounded-xl px-3 py-4 text-center">
-                <p className="text-xl font-extrabold text-stone-900 tabular-nums">{value}</p>
-                <p className="text-[11px] text-stone-400 mt-1">{label}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Secondary 5 */}
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
-            {[
-              { label: "Read time",    value: `~${stats.readingMin} min` },
-              { label: "Speak time",   value: `~${stats.speakMin} min` },
-              { label: "Unique words", value: stats.uniqueWords.toLocaleString() },
-              { label: "Avg sentence", value: `${stats.avgSentenceLen} words` },
-            ].map(({ label, value }) => (
-              <div key={label} className="bg-stone-50 border border-stone-200 rounded-xl px-3 py-3 text-center">
-                <p className="text-base font-bold text-stone-700 tabular-nums">{value}</p>
-                <p className="text-[11px] text-stone-400 mt-0.5">{label}</p>
-              </div>
-            ))}
-            <div className={`rounded-xl px-3 py-3 text-center border ${stats.readability.bg} ${stats.readability.border}`}>
-              <p className={`text-base font-bold ${stats.readability.color}`}>{stats.readability.label}</p>
-              <p className="text-[11px] text-stone-400 mt-0.5">Readability</p>
-            </div>
-          </div>
-
-          {/* Writing Analysis 5 */}
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
-            {[
-              { label: "Pages (300 wpm)", value: stats.pages },
-              { label: "Avg word length",  value: `${stats.avgWordLen} chars` },
-              { label: "Longest word",     value: stats.longestWord || "—" },
-              { label: "Reading grade",    value: `Grade ${stats.grade}` },
-            ].map(({ label, value }) => (
-              <div key={label} className="bg-stone-50 border border-stone-200 rounded-xl px-3 py-3 text-center">
-                <p className="text-base font-bold text-stone-700 tabular-nums truncate">{value}</p>
-                <p className="text-[11px] text-stone-400 mt-0.5">{label}</p>
-              </div>
-            ))}
-            {/* Abuse-free indicator */}
-            {stats.abuseCount === 0 ? (
-              <div className="rounded-xl px-3 py-3 text-center border bg-emerald-50 border-emerald-200">
-                <p className="text-base font-bold text-emerald-600">✓ Clean</p>
-                <p className="text-[11px] text-stone-400 mt-0.5">Abuse-free</p>
-              </div>
-            ) : (
-              <div className="rounded-xl px-3 py-3 text-center border bg-red-50 border-red-200">
-                <p className="text-base font-bold text-red-600">{stats.abuseCount} found</p>
-                <p className="text-[11px] text-stone-400 mt-0.5">Abusive words</p>
-              </div>
-            )}
-          </div>
-
-          {/* Platform Limits */}
-          <div className="bg-white border border-stone-200 rounded-xl overflow-hidden">
-            <button
-              onClick={() => setShowPlatforms((v) => !v)}
-              className="w-full flex items-center justify-between px-5 py-3.5 text-sm font-semibold text-stone-700 hover:bg-stone-50 transition-colors"
-            >
-              <span>Platform character limits</span>
-              <span className="flex items-center gap-2">
-                <span className="text-[11px] font-normal text-stone-400">Twitter, SMS, Instagram, SEO…</span>
-                {showPlatforms ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-              </span>
-            </button>
-            {showPlatforms && (
-              <div className="px-5 pb-5 pt-3 space-y-3.5 border-t border-stone-100">
-                {PLATFORM_LIMITS.map(({ name, limit }) => {
-                  const used = stats.chars;
-                  const pct = Math.min(100, Math.round((used / limit) * 100));
-                  const over = used > limit;
-                  const close = !over && pct >= 85;
-                  const barColor = over ? "bg-red-500" : close ? "bg-amber-400" : "bg-emerald-400";
-                  const textColor = over ? "text-red-600 font-semibold" : close ? "text-amber-600" : "text-stone-400";
-                  return (
-                    <div key={name}>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-xs font-medium text-stone-600">{name}</span>
-                        <span className={`text-xs tabular-nums ${textColor}`}>
-                          {over
-                            ? `${(used - limit).toLocaleString()} over`
-                            : `${(limit - used).toLocaleString()} left`}
-                          {" "}· {limit.toLocaleString()} max
-                        </span>
-                      </div>
-                      <div className="h-1.5 bg-stone-100 rounded-full overflow-hidden">
-                        <div className={`h-full rounded-full transition-all ${barColor}`} style={{ width: `${pct}%` }} />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Keyword Density */}
-          {stats.keywords.length > 0 && (
-            <div className="bg-white border border-stone-200 rounded-xl p-5">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-bold text-stone-700">Keyword Density</h3>
-                <span className="text-[11px] text-stone-400">stop words excluded</span>
-              </div>
-              <div className="space-y-2.5">
-                {displayedKeywords?.map(({ word, count, pct, barWidth }) => (
-                  <div key={word} className="flex items-center gap-3">
-                    <span className="w-28 text-sm font-medium text-stone-700 truncate shrink-0">{word}</span>
-                    <div className="flex-1 h-1.5 bg-stone-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-amber-400 rounded-full transition-all" style={{ width: `${barWidth}%` }} />
-                    </div>
-                    <span className="text-xs text-stone-500 w-8 text-right tabular-nums shrink-0">{count}×</span>
-                    <span className="text-xs text-stone-400 w-12 text-right tabular-nums shrink-0">{pct}%</span>
-                  </div>
-                ))}
-              </div>
-              {stats.keywords.length > 10 && (
-                <button
-                  onClick={() => setShowAllKeywords((v) => !v)}
-                  className="mt-4 text-xs text-stone-400 hover:text-stone-600 flex items-center gap-1 transition-colors"
-                >
-                  {showAllKeywords
-                    ? <><ChevronUp size={12} /> Show fewer</>
-                    : <><ChevronDown size={12} /> Show all {stats.keywords.length} keywords</>}
-                </button>
+        {showFindReplace && (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <input type="text" placeholder="Find…" value={findText} onChange={(e) => setFindText(e.target.value)}
+                className="min-w-32 flex-1 rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-sm focus:border-amber-400 focus:outline-none" />
+              <input type="text" placeholder="Replace with…" value={replaceText} onChange={(e) => setReplaceText(e.target.value)}
+                className="min-w-32 flex-1 rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-sm focus:border-amber-400 focus:outline-none" />
+              <label className="flex cursor-pointer select-none items-center gap-1.5 whitespace-nowrap text-xs text-stone-600">
+                <input type="checkbox" checked={matchCase} onChange={(e) => setMatchCase(e.target.checked)} className="rounded" />
+                Match case
+              </label>
+              <button onClick={handleReplaceAll} disabled={!findText || !display}
+                className="whitespace-nowrap rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-amber-600 disabled:opacity-40">
+                Replace all
+              </button>
+              {findText && (
+                <span className="whitespace-nowrap text-xs text-stone-500">
+                  {matchCount === 0 ? "No matches" : `${matchCount} match${matchCount !== 1 ? "es" : ""}`}
+                </span>
               )}
             </div>
+          </div>
+        )}
+
+        {/* ── Editor ─────────────────────────────────────────────────────── */}
+        <div className="relative">
+          <textarea
+            className="min-h-[20rem] w-full resize-y rounded-xl border border-stone-200 bg-white p-5 text-base leading-relaxed text-stone-800 focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400"
+            placeholder="Start typing, or paste your text here…"
+            value={display}
+            onChange={(e) => setText(e.target.value)}
+            spellCheck
+          />
+          {restored && badgeVisible && display && (
+            <span className="pointer-events-none absolute bottom-3 right-3 flex items-center gap-1.5 rounded-full bg-stone-900/85 px-2.5 py-1 text-[11px] font-medium text-white shadow-sm">
+              <RotateCcw size={11} /> Restored your last draft
+            </span>
           )}
-        </>
-      ) : (
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5">
-          {["Words","Characters","No Spaces","Sentences","Paragraphs","Lines"].map((label) => (
-            <div key={label} className="bg-white border border-stone-200 rounded-xl px-3 py-4 text-center">
-              <p className="text-xl font-extrabold text-stone-200 tabular-nums">0</p>
-              <p className="text-[11px] text-stone-400 mt-1">{label}</p>
+        </div>
+
+        {/* ── Transforms ─────────────────────────────────────────────────── */}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-stone-200 bg-stone-50 px-4 py-3">
+          {TRANSFORMS.map(({ group, items }) => (
+            <div key={group} className="flex flex-wrap items-center gap-1.5">
+              <span className="mr-0.5 text-[11px] font-bold uppercase tracking-wide text-stone-400">{group}</span>
+              {items.map(({ label, title, Icon, fn }) => (
+                <button
+                  key={title}
+                  onClick={() => setText((prev) => fn(prev))}
+                  title={title}
+                  disabled={!display}
+                  className="flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-stone-600 transition-colors hover:border-stone-300 hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <Icon size={13} className="text-stone-400" />
+                  {label}
+                </button>
+              ))}
             </div>
           ))}
         </div>
-      )}
+
+        {/* ── Secondary stats ────────────────────────────────────────────── */}
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 xl:grid-cols-7">
+          {[
+            { label: "Sentences", value: (stats?.sentences ?? 0).toLocaleString() },
+            { label: "Paragraphs", value: (stats?.paragraphs ?? 0).toLocaleString() },
+            { label: "Lines", value: (stats?.lines ?? 0).toLocaleString() },
+            { label: "Unique words", value: (stats?.uniqueWords ?? 0).toLocaleString() },
+            { label: "Avg sentence", value: stats ? `${stats.avgSentenceLen} words` : "—" },
+            { label: "Avg word", value: stats ? `${stats.avgWordLen} chars` : "—" },
+            { label: "Pages", value: stats?.pages ?? "0" },
+          ].map(({ label, value }) => (
+            <div key={label} className="rounded-xl border border-stone-200 bg-white px-3 py-3 text-center">
+              <p className="truncate text-base font-bold tabular-nums text-stone-800">{value}</p>
+              <p className="mt-0.5 text-[11px] text-stone-400">{label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* ── Platform limits ────────────────────────────────────────────── */}
+        {settings.showLimits && (
+          <div className="rounded-xl border border-stone-200 bg-white p-5">
+            <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+              <h3 className="text-sm font-bold text-stone-800">Will it fit?</h3>
+              <p className="text-[11px] text-stone-400">Each platform measured with its own counting rules</p>
+            </div>
+            <div className="grid grid-cols-1 gap-x-6 gap-y-3.5 sm:grid-cols-2">
+              {PLATFORMS.map((platform) => {
+                const used = measureFor(display, platform);
+                const pct = Math.min(100, Math.round((used / platform.max) * 100));
+                const over = used > platform.max;
+                const close = !over && pct >= 85;
+                const folded = platform.truncateAt != null && used > platform.truncateAt;
+                return (
+                  <div key={platform.id}>
+                    <div className="mb-1 flex items-center justify-between gap-2">
+                      <span className="truncate text-xs font-medium text-stone-600">{platform.name}</span>
+                      <span className={`shrink-0 text-xs tabular-nums ${over ? "font-semibold text-red-600" : close ? "text-amber-600" : "text-stone-400"}`}>
+                        {over ? `${(used - platform.max).toLocaleString()} over` : `${(platform.max - used).toLocaleString()} left`}
+                      </span>
+                    </div>
+                    <div className="relative h-1.5 overflow-hidden rounded-full bg-stone-100">
+                      <div
+                        className={`h-full rounded-full transition-all ${over ? "bg-red-500" : close ? "bg-amber-400" : "bg-emerald-400"}`}
+                        style={{ width: `${pct}%` }}
+                      />
+                      {platform.truncateAt != null && platform.truncateAt < platform.max && (
+                        <span aria-hidden="true" className="absolute top-0 h-full w-px bg-stone-400"
+                          style={{ left: `${(platform.truncateAt / platform.max) * 100}%` }} />
+                      )}
+                    </div>
+                    {platform.id === "sms" && sms.segments > 1 && (
+                      <p className="mt-1 text-[10px] text-amber-600">
+                        {sms.segments} messages · {sms.encoding}
+                        {sms.encoding === "UCS-2" && " (an emoji or curly quote cut capacity to 70)"}
+                      </p>
+                    )}
+                    {folded && platform.id !== "sms" && (
+                      <p className="mt-1 text-[10px] text-stone-400">
+                        Cut at {platform.truncateAt!.toLocaleString()} in the feed
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <p className="mt-4 border-t border-stone-100 pt-3 text-[11px] leading-relaxed text-stone-400">
+              Counts respect each platform&rsquo;s real rules: X weights links at 23 and emoji at 2, SMS
+              switches encoding when you use a character outside the GSM alphabet, and the grey marker
+              shows where a feed collapses the post behind &ldquo;see more&rdquo;.
+            </p>
+          </div>
+        )}
+
+        {/* ── Live previews ──────────────────────────────────────────────── */}
+        {settings.showPreviews && (
+          <div>
+            <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+              <h3 className="text-sm font-bold text-stone-800">See it before you post it</h3>
+              <p className="text-[11px] text-stone-400">Truncated exactly as each platform would</p>
+            </div>
+            <SocialPreview text={display} />
+          </div>
+        )}
+
+        {/* ── Analysis tabs ──────────────────────────────────────────────── */}
+        {settings.showAnalysis && (
+          <div className="rounded-xl border border-stone-200 bg-white">
+            <div className="flex items-center gap-1 overflow-x-auto border-b border-stone-100 px-3 pt-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {([["keywords", "Keywords"], ["phrases", "Phrases"], ["sentences", "Long sentences"], ["style", "Style"]] as [Tab, string][]).map(([id, label]) => (
+                <button key={id} onClick={() => setTab(id)}
+                  className={`shrink-0 rounded-t-lg px-3.5 py-2 text-xs font-bold transition-colors ${tab === id ? "bg-stone-100 text-stone-900" : "text-stone-400 hover:text-stone-600"}`}>
+                  {label}
+                  {id === "sentences" && stats && stats.hardSentences.length > 0 && (
+                    <span className="ml-1.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] text-amber-700">
+                      {stats.hardSentences.length}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            <div className="p-5">
+              {!stats && (
+                <p className="py-6 text-center text-sm text-stone-400">
+                  Start typing to see keyword density, repeated phrases, and sentences worth shortening.
+                </p>
+              )}
+
+              {stats && tab === "keywords" && (
+                stats.keywords.length === 0 ? (
+                  <p className="py-6 text-center text-sm text-stone-400">No repeated keywords yet — keep writing.</p>
+                ) : (
+                  <>
+                    <div className="space-y-2.5">
+                      {(showAllKeywords ? stats.keywords : stats.keywords.slice(0, 10)).map(({ term, count, pct, barWidth }) => (
+                        <div key={term} className="flex items-center gap-3">
+                          <span className="w-32 shrink-0 truncate text-sm font-medium text-stone-700">{term}</span>
+                          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-stone-100">
+                            <div className="h-full rounded-full bg-amber-400" style={{ width: `${barWidth}%` }} />
+                          </div>
+                          <span className="w-9 shrink-0 text-right text-xs tabular-nums text-stone-500">{count}×</span>
+                          <span className="w-12 shrink-0 text-right text-xs tabular-nums text-stone-400">{pct}%</span>
+                        </div>
+                      ))}
+                    </div>
+                    {stats.keywords.length > 10 && (
+                      <button onClick={() => setShowAllKeywords((v) => !v)}
+                        className="mt-4 text-xs font-semibold text-stone-400 transition-colors hover:text-stone-700">
+                        {showAllKeywords ? "Show fewer" : `Show all ${stats.keywords.length}`}
+                      </button>
+                    )}
+                    <p className="mt-4 border-t border-stone-100 pt-3 text-[11px] text-stone-400">
+                      {settings.includeStopWords ? "Filler words included" : "Filler words excluded"} ·{" "}
+                      {settings.minKeywordLength}+ characters. For SEO, a main keyword usually sits between 1% and 2%.
+                    </p>
+                  </>
+                )
+              )}
+
+              {stats && tab === "phrases" && (
+                stats.phrases.length === 0 ? (
+                  <p className="py-6 text-center text-sm text-stone-400">No phrase appears more than once yet.</p>
+                ) : (
+                  <>
+                    <div className="flex flex-wrap gap-2">
+                      {stats.phrases.map(({ term, count }) => (
+                        <span key={term} className="inline-flex items-center gap-2 rounded-lg border border-stone-200 bg-stone-50 px-3 py-1.5 text-sm text-stone-700">
+                          {term}
+                          <span className="rounded bg-white px-1.5 py-0.5 text-[11px] font-bold tabular-nums text-stone-500">{count}×</span>
+                        </span>
+                      ))}
+                    </div>
+                    <p className="mt-4 border-t border-stone-100 pt-3 text-[11px] text-stone-400">
+                      Two- and three-word phrases you have repeated — useful for spotting tics, and for the
+                      long-tail phrases search engines match.
+                    </p>
+                  </>
+                )
+              )}
+
+              {stats && tab === "style" && style && (
+                <div className="space-y-5">
+                  {/* Focus keyword — only when the writer has set one. */}
+                  {focus && (
+                    <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+                      <p className="flex flex-wrap items-baseline gap-x-2 text-sm font-bold text-blue-900">
+                        <Search size={13} className="text-blue-600" />
+                        &ldquo;{focus.term}&rdquo;
+                        <span className="text-xs font-normal text-blue-700">
+                          {focus.count}× · {focus.density}% density
+                        </span>
+                      </p>
+                      <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-[11px]">
+                        <span className={focus.inFirstLine ? "text-emerald-700" : "text-stone-500"}>
+                          {focus.inFirstLine ? "✓" : "○"} in the first line
+                        </span>
+                        <span className={focus.inOpening ? "text-emerald-700" : "text-stone-500"}>
+                          {focus.inOpening ? "✓" : "○"} in the opening 100 words
+                        </span>
+                        <span className={Number(focus.density) >= 1 && Number(focus.density) <= 2.5 ? "text-emerald-700" : "text-stone-500"}>
+                          {Number(focus.density) >= 1 && Number(focus.density) <= 2.5 ? "✓" : "○"} density in the 1–2.5% range
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Four style measures, each with the audience's own target. */}
+                  <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+                    {[
+                      {
+                        label: "Passive voice",
+                        value: `${style.passivePct}%`,
+                        good: style.passivePct <= audience.passiveMax,
+                        note: `target under ${audience.passiveMax}%`,
+                      },
+                      {
+                        label: "Adverbs",
+                        value: String(style.adverbs.length),
+                        good: style.adverbPct <= 5,
+                        note: `${style.adverbPct}% of words`,
+                      },
+                      {
+                        label: "Filler words",
+                        value: String(style.fillerTotal),
+                        good: style.fillerTotal <= Math.max(2, Math.round(stats.words / 100)),
+                        note: "hedges and padding",
+                      },
+                      {
+                        label: "Complex words",
+                        value: `${style.complexPct}%`,
+                        good: style.complexPct <= 20,
+                        note: "3+ syllables",
+                      },
+                    ].map(({ label, value, good, note }) => (
+                      <div
+                        key={label}
+                        className={`rounded-lg border p-3 ${good ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}`}
+                      >
+                        <p className={`text-lg font-extrabold tabular-nums ${good ? "text-emerald-700" : "text-amber-700"}`}>
+                          {value}
+                        </p>
+                        <p className="text-[11px] font-semibold text-stone-600">{label}</p>
+                        <p className="text-[10px] text-stone-400">{note}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {style.passive.length > 0 && (
+                    <div>
+                      <p className="mb-2 text-xs font-bold text-stone-700">
+                        Passive constructions found
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {style.passive.slice(0, 12).map((h, i) => (
+                          <span key={i} className="rounded-md bg-stone-100 px-2.5 py-1 text-[11px] text-stone-700">
+                            {h.match}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {style.fillers.length > 0 && (
+                    <div>
+                      <p className="mb-2 text-xs font-bold text-stone-700">
+                        Words a second draft usually cuts
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {style.fillers.slice(0, 15).map(({ word, count }) => (
+                          <span key={word} className="inline-flex items-center gap-1.5 rounded-md border border-stone-200 px-2.5 py-1 text-[11px] text-stone-700">
+                            {word}
+                            <span className="font-bold tabular-nums text-stone-400">{count}×</span>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div>
+                    <p className="mb-2 text-xs font-bold text-stone-700">
+                      Sentence rhythm{" "}
+                      <span className="font-normal text-stone-400">
+                        · variety {style.lengthVariety}
+                      </span>
+                    </p>
+                    {/* Bars show each sentence's length in order, so a wall of
+                        identical bars reads instantly as monotonous prose. */}
+                    <div className="flex h-14 items-end justify-start gap-1 overflow-hidden">
+                      {style.sentenceLengths.slice(0, 60).map((n, i) => (
+                        <span
+                          key={i}
+                          title={`${n} words`}
+                          className={`w-2.5 shrink-0 rounded-sm sm:w-3 ${n > audience.sentenceLimit ? "bg-amber-400" : "bg-stone-300"}`}
+                          style={{ height: `${Math.max(6, Math.min(100, (n / 45) * 100))}%` }}
+                        />
+                      ))}
+                    </div>
+                    <p className="mt-2 text-[11px] leading-relaxed text-stone-400">
+                      Sentences of similar length read as monotonous even when each one is fine.
+                      Amber bars are over {audience.sentenceLimit} words.
+                    </p>
+                  </div>
+
+                  <p className="border-t border-stone-100 pt-3 text-[11px] leading-relaxed text-stone-400">
+                    Targets follow your chosen audience — {audience.name.toLowerCase()} tolerates up to{" "}
+                    {audience.passiveMax}% passive. Passive detection is pattern matching rather than
+                    grammar parsing, so it catches most cases and occasionally misfires.
+                  </p>
+                </div>
+              )}
+
+              {stats && tab === "sentences" && (
+                stats.hardSentences.length === 0 ? (
+                  <p className="flex items-center justify-center gap-2 py-6 text-center text-sm text-emerald-700">
+                    <Sparkles size={15} />
+                    Every sentence is under {audience.sentenceLimit} words — right for {audience.name.toLowerCase()}.
+                  </p>
+                ) : (
+                  <>
+                    <ul className="space-y-2.5">
+                      {stats.hardSentences.slice(0, 8).map((s, i) => (
+                        <li key={i} className={`rounded-lg border p-3.5 ${s.veryHard ? "border-red-200 bg-red-50" : "border-amber-200 bg-amber-50"}`}>
+                          <div className="mb-1.5 flex items-center gap-2">
+                            <AlertTriangle size={13} className={s.veryHard ? "text-red-600" : "text-amber-600"} />
+                            <span className={`text-[11px] font-bold uppercase tracking-wide ${s.veryHard ? "text-red-700" : "text-amber-700"}`}>
+                              {s.words} words · {s.veryHard ? "very hard to follow" : "getting long"}
+                            </span>
+                          </div>
+                          <p className="text-sm leading-relaxed text-stone-700">
+                            {s.text.length > 260 ? `${s.text.slice(0, 260)}…` : s.text}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="mt-4 border-t border-stone-100 pt-3 text-[11px] text-stone-400">
+                      Flagged against {audience.name.toLowerCase()}, where sentences over{" "}
+                      {audience.sentenceLimit} words start to lose readers. Change the audience in the
+                      filters to move this threshold.
+                    </p>
+                  </>
+                )
+              )}
+            </div>
+          </div>
+        )}
+
+        {stats && (stats.slurCount > 0 || stats.strongCount > 0 || stats.mildCount > 0) && (
+          <div className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 p-4">
+            <AlertTriangle size={15} className="mt-0.5 shrink-0 text-amber-600" />
+            <p className="text-xs leading-relaxed text-amber-800">
+              Found{" "}
+              {[
+                stats.slurCount && `${stats.slurCount} slur${stats.slurCount > 1 ? "s" : ""}`,
+                stats.strongCount && `${stats.strongCount} strong`,
+                stats.mildCount && `${stats.mildCount} mild`,
+              ].filter(Boolean).join(", ")}{" "}
+              profanity. Use <strong>Censor</strong> above to mask them.
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
