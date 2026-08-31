@@ -1,5 +1,7 @@
 import type { MetadataRoute } from "next";
 
+import { jobOpenings } from "@/data/jobOpenings";
+
 const BASE = "https://codedmind.co.in";
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -44,6 +46,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE}/training`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
     { url: `${BASE}/contact`,  lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE}/careers`,  lastModified: now, changeFrequency: "weekly",  priority: 0.6 },
+    // Individual job pages carry JobPosting schema and are the entry point
+    // from Google Jobs, so they belong in the sitemap in their own right.
+    ...jobOpenings.map((job) => ({
+      url: `${BASE}/careers/${job.slug}`,
+      lastModified: new Date(job.postedAt),
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    })),
     { url: `${BASE}/privacy`,  lastModified: now, changeFrequency: "yearly",  priority: 0.3 },
     { url: `${BASE}/terms`,    lastModified: now, changeFrequency: "yearly",  priority: 0.3 },
   ];

@@ -5,6 +5,15 @@ export type JobDetail = {
 
 export type JobOpening = {
   slug: string;
+  /**
+   * Real publication date, ISO 8601. Required by Google for JobPosting rich
+   * results — a posting without one is not eligible.
+   */
+  postedAt: string;
+  /** When the listing stops being valid. Google drops stale postings. */
+  closesAt: string;
+  /** schema.org employmentType: INTERN, FULL_TIME, PART_TIME, CONTRACTOR. */
+  employmentType: string;
   title: string;
   eyebrow: string;
   summary: string;
@@ -18,6 +27,9 @@ export type JobOpening = {
 export const jobOpenings: JobOpening[] = [
   {
     slug: "data-engineering-intern",
+    postedAt: "2026-03-24",
+    closesAt: "2026-12-31",
+    employmentType: "INTERN",
     title: "Data Engineering Intern",
     eyebrow: "Current Opening",
     summary:

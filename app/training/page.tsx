@@ -11,7 +11,7 @@ import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
 export const metadata: Metadata = {
   title: "Training — Data Science, Data Engineering & AI",
   description:
-    "Corporate and individual training in data science, data engineering, and AI — taught by the engineers who build these systems for clients. Python, SQL, Airflow, dbt, Spark, and production RAG, scoped around your team.",
+    "Training in data science, data engineering and AI, taught by the engineers who build these systems for clients. Python, SQL, Airflow, dbt, Spark and RAG.",
   keywords: [
     "data science training",
     "data engineering training",

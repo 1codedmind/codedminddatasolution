@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Unix Timestamp Converter — Epoch to Date & Time",
+  title: "Unix Timestamp Converter — Epoch to Date",
   description:
     "Convert Unix timestamps to human-readable dates and back. Supports milliseconds and seconds. Live current timestamp. Free, instant, no login required.",
   keywords: [
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://codedmind.co.in/tools/timestamp" },
   openGraph: {
     images: ["/opengraph-image"],
-    title: "Unix Timestamp Converter — Epoch to Date & Time",
+    title: "Unix Timestamp Converter — Epoch to Date",
     description: "Convert Unix timestamps to human-readable dates and back. Supports milliseconds and seconds. Free.",
     url: "https://codedmind.co.in/tools/timestamp",
   },

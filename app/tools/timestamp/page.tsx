@@ -4,9 +4,9 @@ import TimestampTool from "./TimestampTool";
 import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
 
 export const metadata: Metadata = {
-  title: "Unix Timestamp Converter — Epoch to Date & Date to Unix Online",
+  title: "Unix Timestamp Converter — Epoch to Date",
   description:
-    "Convert Unix timestamps to readable dates and back. Free online epoch converter — supports seconds and milliseconds, UTC, ISO 8601, and local time. No login needed.",
+    "Convert Unix timestamps to dates and back. Free epoch converter supporting seconds, milliseconds, UTC, ISO 8601 and local time. No login.",
   alternates: { canonical: "https://codedmind.co.in/tools/timestamp" },
   openGraph: {
     images: ["/opengraph-image"],

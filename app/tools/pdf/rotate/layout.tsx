@@ -4,6 +4,6 @@ export const metadata: Metadata = {
   description: "Rotate PDF pages by 90°, 180°, or 270°. Works in your browser — no uploads, no account needed.",
   keywords: ["rotate pdf", "rotate pdf online free", "pdf rotation tool", "flip pdf pages"],
   alternates: { canonical: "https://codedmind.co.in/tools/pdf/rotate" },
-  openGraph: { title: "Rotate PDF — Free Online Tool", url: "https://codedmind.co.in/tools/pdf/rotate" },
+  openGraph: { images: ["/opengraph-image"], title: "Rotate PDF — Free Online Tool", url: "https://codedmind.co.in/tools/pdf/rotate" },
 };
 export default function Layout({ children }: { children: React.ReactNode }) { return <>{children}</>; }

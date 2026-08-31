@@ -15,7 +15,7 @@ import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
 export const metadata: Metadata = {
   title: "Torn Bazaar Profit Finder — Buy Low, Sell High",
   description:
-    "Find Torn items selling in player bazaars below market value right now. Live cheapest-bazaar prices, profit and margin for every item, with both market-resale and vendor exit routes. Free, no API key needed.",
+    "Every Torn item selling in a player bazaar below market value right now, ranked by profit — live prices, margins and both resale routes. Free, no API key.",
   keywords: [
     "torn city profit finder",
     "torn bazaar prices",

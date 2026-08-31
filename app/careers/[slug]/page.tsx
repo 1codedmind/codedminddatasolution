@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import CareerApplicationForm from "@/components/CareerApplicationForm";
 import { getJobOpening, jobOpenings } from "@/data/jobOpenings";
+import JobPostingJsonLd from "@/components/seo/JobPostingJsonLd";
+import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
 
 type CareerRolePageProps = {
   params: Promise<{
@@ -39,8 +41,16 @@ export async function generateMetadata({
   }
 
   return {
-    title: `${job.title} | Careers`,
+    title: `${job.title} — Careers at Coded Mind`,
     description: job.summary,
+    alternates: { canonical: `https://codedmind.co.in/careers/${job.slug}` },
+    openGraph: {
+      images: ["/opengraph-image"],
+      title: `${job.title} — Coded Mind`,
+      description: job.summary,
+      url: `https://codedmind.co.in/careers/${job.slug}`,
+      type: "article",
+    },
   };
 }
 
@@ -56,6 +66,13 @@ export default async function CareerRolePage({
 
   return (
     <main className="bg-[#fcfaf6]">
+      <JobPostingJsonLd job={job} />
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Careers", path: "/careers" },
+          { name: job.title, path: `/careers/${job.slug}` },
+        ]}
+      />
       <section className="border-b border-stone-200 bg-[linear-gradient(180deg,#fcfaf6_0%,#f4ecde_100%)]">
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-24">
           <Link

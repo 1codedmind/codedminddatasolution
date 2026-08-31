@@ -4,9 +4,9 @@ import WordCounterTool from "./WordCounterTool";
 import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
 
 export const metadata: Metadata = {
-  title: "Word Counter with Live Google, X, SMS & LinkedIn Previews — Free",
+  title: "Word Counter — Audience Targets & Social Previews",
   description:
-    "Pick your audience and every target adjusts — readability, sentence length, passive voice. Catch passive voice, adverbs and filler words, track an SEO focus keyword, count characters correctly with emoji as one, and preview how your text truncates on Google, X, SMS and LinkedIn. Free, no login.",
+    "Pick your audience and every target adjusts. Catch passive voice, adverbs and fillers, track an SEO keyword, and preview how text truncates on Google and X.",
   alternates: { canonical: "https://codedmind.co.in/tools/word-counter" },
   openGraph: {
     images: ["/opengraph-image"],

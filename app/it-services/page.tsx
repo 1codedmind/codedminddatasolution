@@ -19,9 +19,9 @@ import {
 import CTA from "@/sections/CTA";
 
 export const metadata: Metadata = {
-  title: "IT Services — Software Development, Cloud & DevOps, Consulting",
+  title: "IT Services — Software, Cloud & DevOps",
   description:
-    "Custom software and app development, cloud migration and DevOps, and IT consulting or staff augmentation. Senior engineers, fixed scope or dedicated team, delivered remotely worldwide.",
+    "Custom software, cloud migration and DevOps, and IT consulting or staff augmentation. Senior engineers, fixed scope or dedicated team, delivered remotely.",
   keywords: [
     "custom software development",
     "web application development",

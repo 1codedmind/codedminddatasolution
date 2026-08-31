@@ -6,7 +6,7 @@ import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
 export const metadata: Metadata = {
   title: "Free Password Generator — Strong Random Passwords Online",
   description:
-    "Generate strong, random passwords instantly. Choose length, uppercase, lowercase, numbers, and symbols. Free, runs in your browser — your password is never sent anywhere.",
+    "Generate strong random passwords instantly. Set length, cases, numbers and symbols. Runs in your browser — your password is never sent anywhere.",
   alternates: { canonical: "https://codedmind.co.in/tools/password-generator" },
   openGraph: {
     images: ["/opengraph-image"],

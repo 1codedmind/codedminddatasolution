@@ -8,6 +8,7 @@ import ChatWidget from "@/components/ChatWidget";
 import { ConsentProvider } from "@/components/CookieConsent";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import AdSenseScript from "@/components/ads/AdSenseScript";
+import OrganizationJsonLd from "@/components/seo/OrganizationJsonLd";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import SmoothScroll from "@/components/landing/SmoothScroll";
@@ -32,7 +33,7 @@ export const metadata: Metadata = {
     template: "%s | Coded Mind",
   },
   description:
-    "Free online developer tools: JSON formatter, Base64 encoder/decoder, UUID generator, word counter, Unix timestamp converter, timezone converter, and password generator. No login. No data sent.",
+    "Free browser-based developer tools — JSON formatter, word counter, UUID and Base64, timestamp and timezone converters, PDF tools. No login, nothing uploaded.",
   keywords: [
     "free developer tools",
     "JSON formatter online",
@@ -89,6 +90,7 @@ export default function RootLayout({
           <Footer />
           <ChatWidget />
           <GoogleAnalytics />
+          <OrganizationJsonLd />
           <AdSenseScript />
           <Analytics />
           <SpeedInsights />

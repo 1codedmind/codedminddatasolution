@@ -1,6 +1,28 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, BriefcaseBusiness, Sparkles } from "lucide-react";
 import { jobOpenings } from "@/data/jobOpenings";
+
+export const metadata: Metadata = {
+  title: "Careers — Data Engineering & AI Jobs",
+  description:
+    "Open roles at Coded Mind — work on production data pipelines, cloud platforms and AI features alongside the engineers who ship them for clients.",
+  keywords: [
+    "data engineering jobs",
+    "data engineering internship",
+    "AI jobs India",
+    "python sql jobs",
+    "remote data jobs",
+  ],
+  alternates: { canonical: "https://codedmind.co.in/careers" },
+  openGraph: {
+    images: ["/opengraph-image"],
+    title: "Careers at Coded Mind",
+    description: "Open roles in data engineering, cloud and AI.",
+    url: "https://codedmind.co.in/careers",
+  },
+};
+
 
 const featuredOpening = jobOpenings[0];
 

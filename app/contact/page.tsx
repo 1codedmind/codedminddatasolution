@@ -7,7 +7,7 @@ import ContactForm from "@/components/ContactForm";
 export const metadata: Metadata = {
   title: "Contact Us",
   description:
-    "Get in touch with Coded Mind about data engineering, cloud data platforms, dashboards, and automation. Email hr@codedmind.co.in or send us a message — we reply within 1–2 business days.",
+    "Talk to us about data engineering, cloud platforms, dashboards and automation. Email hr@codedmind.co.in or send a message — we reply in 1–2 business days.",
   alternates: { canonical: "https://codedmind.co.in/contact" },
   openGraph: {
     images: ["/opengraph-image"],

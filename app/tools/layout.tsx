@@ -5,7 +5,7 @@ import MoreTools from "@/components/tools/MoreTools";
 
 export const metadata: Metadata = {
   title: "Free Developer Tools",
-  description: "Free online developer tools: JSON formatter, Base64 encoder, UUID generator, word counter, Unix timestamp converter, timezone converter, password generator, and PDF tools.",
+  description: "Free developer tools that run in your browser — JSON formatter, word counter, UUID, Base64, timestamp and timezone converters, and PDF tools. No login.",
   alternates: { canonical: "https://codedmind.co.in/tools" },
   openGraph: {
     images: ["/opengraph-image"],

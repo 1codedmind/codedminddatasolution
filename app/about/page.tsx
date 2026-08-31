@@ -5,7 +5,7 @@ import { Database, Code2, Sparkles, Wrench, Mail } from "lucide-react";
 export const metadata: Metadata = {
   title: "About Coded Mind",
   description:
-    "Coded Mind builds data engineering, full-stack software, and AI solutions — and publishes a set of free browser-based developer tools. Who we are, what we build, and why the tools are free.",
+    "We build data engineering, full-stack software and AI solutions — and publish free browser-based developer tools. Who we are, and why the tools are free.",
   alternates: { canonical: "https://codedmind.co.in/about" },
   openGraph: {
     images: ["/opengraph-image"],

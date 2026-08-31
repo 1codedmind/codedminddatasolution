@@ -8,9 +8,9 @@ import Solutions from "@/sections/Solutions";
 import CTA from "@/sections/CTA";
 
 export const metadata: Metadata = {
-  title: "Services — Data Engineering, Full-Stack Development & AI",
+  title: "Services — Data Engineering, Software & AI",
   description:
-    "One team across data engineering, full-stack software, and AI. ETL pipelines on Snowflake and Databricks, web applications and APIs, and AI features with real evaluation — built by the team that runs its own platforms on the same stack.",
+    "One team across data engineering, full-stack software and AI — ETL pipelines, web applications and APIs, and AI features built with real evaluation.",
   keywords: [
     "data engineering services",
     "full stack development company",
