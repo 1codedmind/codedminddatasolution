@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
-import { Menu, X, ChevronDown, CircleUserRound, LayoutDashboard, FileUser, ClipboardList, Braces, Globe, Files, ArrowRight } from "lucide-react";
+import { Menu, X, ChevronDown, CircleUserRound, LayoutDashboard, FileUser, ClipboardList, Braces, Globe, Files, ArrowRight , BarChart3} from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import LogoutButton from "@/components/auth/LogoutButton";
 
@@ -160,6 +160,7 @@ export default function Navbar({ sessionEmail, sessionRole }: { sessionEmail?: s
                           { href: "/hrms",        icon: LayoutDashboard, label: "HRMS Portal"     },
                           { href: "/admin",       icon: LayoutDashboard, label: "Admin Dashboard" },
                           { href: "/admin/leads", icon: FileUser,        label: "Leads"           },
+                          { href: "/admin/analytics", icon: BarChart3,  label: "Page analytics"  },
                         ] : [
                           { href: "/candidate",         icon: LayoutDashboard, label: "Dashboard"   },
                           { href: "/candidate/profile", icon: FileUser,        label: "Profile"     },

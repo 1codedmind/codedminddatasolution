@@ -6,7 +6,7 @@ import { AlertTriangle, Clock, TrendingUp } from "lucide-react";
 import { getTornDeals } from "@/lib/torn/deals";
 import TornDealsTable from "@/components/tools/torn/TornDealsTable";
 import LastFetched from "@/components/tools/torn/LastFetched";
-import VisitorCount from "@/components/tools/torn/VisitorCount";
+import PageVisitorCount from "@/components/tools/PageVisitorCount";
 import AdSlot from "@/components/ads/AdSlot";
 import { AD_SLOTS } from "@/lib/ads/slots";
 import AdSidebar from "@/components/ads/AdSidebar";
@@ -92,7 +92,7 @@ export default function TornProfitPage() {
           <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
             <TrendingUp size={12} /> Live bazaar prices
           </span>
-          <VisitorCount />
+          <PageVisitorCount page="torn-profit" noun="traders" />
         </div>
         <h1 className="text-3xl font-extrabold tracking-tight text-stone-950 sm:text-4xl">
           Torn Bazaar Profit Finder

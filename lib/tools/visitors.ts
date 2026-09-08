@@ -24,6 +24,25 @@ import { getSql, hasDatabaseUrl } from "@/lib/db";
 
 const DAY_MS = 24 * 60 * 60_000;
 
+/**
+ * Pages we count, keyed by the slug the browser sends.
+ *
+ * The API takes a slug and looks the real page key up here rather than
+ * accepting a page name from the caller. Without that, anyone could POST
+ * arbitrary names and fill the table with rows of their own invention.
+ *
+ * Keys must never change once live — they are the identity of the historical
+ * data, so renaming one silently orphans everything recorded before.
+ */
+export const TRACKED_PAGES: Record<string, { key: string; label: string }> = {
+  "word-counter": { key: "tools/word-counter", label: "Word Counter" },
+  "torn-profit": { key: "tools/games/torn-profit", label: "Torn Profit Finder" },
+};
+
+export function resolvePage(slug: string): string | null {
+  return TRACKED_PAGES[slug]?.key ?? null;
+}
+
 /** Rows older than this are swept; two years is far past being interesting. */
 const RETENTION_DAYS = 730;
 
@@ -81,6 +100,14 @@ async function ensureTable() {
   await sql`
     CREATE INDEX IF NOT EXISTS idx_page_visitors_page_hash
       ON page_visitors (page, visitor_hash)
+  `;
+  // Added after the table shipped, so CREATE TABLE IF NOT EXISTS above will not
+  // introduce it on existing deployments — same pattern as lib/leads.ts.
+  // Rows written before this existed default to a single visit, which is the
+  // truth we have for them.
+  await sql`
+    ALTER TABLE page_visitors
+      ADD COLUMN IF NOT EXISTS visits INTEGER NOT NULL DEFAULT 1
   `;
   tableReady = true;
 }
@@ -163,16 +190,19 @@ export async function recordAndCountVisit(input: {
       const hash = visitorHash(input.page, input.ip, input.userAgent ?? "");
       const day = utcDay();
 
-      const inserted = await sql<{ page: string }[]>`
-        INSERT INTO page_visitors (page, day, visitor_hash)
-        VALUES (${input.page}, ${day}, ${hash})
-        ON CONFLICT (page, day, visitor_hash) DO NOTHING
-        RETURNING page
+      // Increment rather than ignore the conflict: the unique count comes from
+      // distinct hashes, but total visits needs every view.
+      const [row] = await sql<{ visits: number }[]>`
+        INSERT INTO page_visitors (page, day, visitor_hash, visits)
+        VALUES (${input.page}, ${day}, ${hash}, 1)
+        ON CONFLICT (page, day, visitor_hash)
+        DO UPDATE SET visits = page_visitors.visits + 1
+        RETURNING visits
       `;
 
-      // A genuinely new visitor makes the cached counts wrong immediately, and
-      // seeing your own visit counted is the point of the widget.
-      if (inserted.length > 0) {
+      // visits = 1 means the row was just created, so this is a visitor we had
+      // not seen today and the cached counts are now stale.
+      if (row?.visits === 1) {
         countCache.delete(input.page);
       }
     }
@@ -184,4 +214,139 @@ export async function recordAndCountVisit(input: {
     console.error("[visitors] failed:", err);
     return null;
   }
+}
+
+/* ── Admin analytics ───────────────────────────────────────────────────── */
+
+export type DayPoint = { day: string; visitors: number; visits: number };
+
+export type PageAnalytics = {
+  slug: string;
+  label: string;
+  /** Every view, including repeat views by the same person on the same day. */
+  totalVisits: number;
+  /** Distinct visitors ever. */
+  uniqueVisitors: number;
+  /**
+   * Visitors seen on more than one separate day.
+   *
+   * This is the honest definition available from what we store: we hold no
+   * cookie or account, so "recurring" means the same IP and browser came back
+   * on a different day. Someone on a phone whose IP changes between visits
+   * counts as two new visitors, so this figure is a floor, not an exact count.
+   */
+  recurringVisitors: number;
+  /** Distinct visitors today. */
+  todayVisitors: number;
+  /** Views today. */
+  todayVisits: number;
+  /** Of today's visitors, how many had been seen on an earlier day. */
+  todayReturning: number;
+  /** Distinct visitors over the last 7 and 30 days. */
+  last7: number;
+  last30: number;
+  /** Per-day series, oldest first, for charting. */
+  series: DayPoint[];
+  /** The busiest single day recorded. */
+  busiestDay: DayPoint | null;
+};
+
+function num(v: unknown): number {
+  const n = parseInt(String(v ?? "0"), 10);
+  return Number.isFinite(n) ? n : 0;
+}
+
+/** Analytics for one tracked page. Days controls the length of the series. */
+export async function getPageAnalytics(slug: string, days = 30): Promise<PageAnalytics | null> {
+  const entry = TRACKED_PAGES[slug];
+  if (!entry || !hasDatabaseUrl()) return null;
+
+  await ensureTable();
+  const sql = getSql();
+  const page = entry.key;
+  const today = utcDay();
+  const from7 = utcDay(new Date(Date.now() - 7 * DAY_MS));
+  const from30 = utcDay(new Date(Date.now() - 30 * DAY_MS));
+  const fromSeries = utcDay(new Date(Date.now() - days * DAY_MS));
+
+  const [totals] = await sql<
+    { total_visits: string; unique_visitors: string; today_visitors: string; today_visits: string; last7: string; last30: string }[]
+  >`
+    SELECT
+      COALESCE(SUM(visits), 0)::text                                          AS total_visits,
+      COUNT(DISTINCT visitor_hash)::text                                      AS unique_visitors,
+      COUNT(DISTINCT visitor_hash) FILTER (WHERE day = ${today})::text        AS today_visitors,
+      COALESCE(SUM(visits) FILTER (WHERE day = ${today}), 0)::text            AS today_visits,
+      COUNT(DISTINCT visitor_hash) FILTER (WHERE day >= ${from7})::text       AS last7,
+      COUNT(DISTINCT visitor_hash) FILTER (WHERE day >= ${from30})::text      AS last30
+    FROM page_visitors
+    WHERE page = ${page}
+  `;
+
+  // Seen on two or more distinct days.
+  const [recurring] = await sql<{ n: string }[]>`
+    SELECT COUNT(*)::text AS n FROM (
+      SELECT visitor_hash
+      FROM page_visitors
+      WHERE page = ${page}
+      GROUP BY visitor_hash
+      HAVING COUNT(DISTINCT day) > 1
+    ) AS repeat_visitors
+  `;
+
+  // Today's visitors who also appear on an earlier day.
+  const [returning] = await sql<{ n: string }[]>`
+    SELECT COUNT(*)::text AS n FROM (
+      SELECT visitor_hash
+      FROM page_visitors
+      WHERE page = ${page}
+      GROUP BY visitor_hash
+      HAVING bool_or(day = ${today}) AND bool_or(day < ${today})
+    ) AS returned_today
+  `;
+
+  const series = await sql<{ day: string; visitors: string; visits: string }[]>`
+    SELECT day,
+           COUNT(DISTINCT visitor_hash)::text AS visitors,
+           COALESCE(SUM(visits), 0)::text     AS visits
+    FROM page_visitors
+    WHERE page = ${page} AND day >= ${fromSeries}
+    GROUP BY day
+    ORDER BY day ASC
+  `;
+
+  const points: DayPoint[] = series.map((r) => ({
+    day: r.day,
+    visitors: num(r.visitors),
+    visits: num(r.visits),
+  }));
+
+  const busiestDay = points.length
+    ? points.reduce((a, b) => (b.visitors > a.visitors ? b : a))
+    : null;
+
+  return {
+    slug,
+    label: entry.label,
+    totalVisits: num(totals?.total_visits),
+    uniqueVisitors: num(totals?.unique_visitors),
+    recurringVisitors: num(recurring?.n),
+    todayVisitors: num(totals?.today_visitors),
+    todayVisits: num(totals?.today_visits),
+    todayReturning: num(returning?.n),
+    last7: num(totals?.last7),
+    last30: num(totals?.last30),
+    series: points,
+    busiestDay,
+  };
+}
+
+/** Analytics for every tracked page, for the admin overview. */
+export async function getAllPageAnalytics(days = 30): Promise<PageAnalytics[]> {
+  const out: PageAnalytics[] = [];
+  for (const slug of Object.keys(TRACKED_PAGES)) {
+    const a = await getPageAnalytics(slug, days);
+    if (a) out.push(a);
+  }
+  return out;
 }

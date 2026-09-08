@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import WordCounterTool from "./WordCounterTool";
 import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
+import PageVisitorCount from "@/components/tools/PageVisitorCount";
 
 export const metadata: Metadata = {
   title: "Word Counter — Audience Targets & Social Previews",
@@ -217,9 +218,12 @@ export default function WordCounterPage() {
       />
 
       <div className="mb-8">
-        <a href="/tools" className="text-sm text-stone-400 hover:text-stone-700 transition">← All tools</a>
-        <h1 className="text-3xl font-extrabold text-stone-900 tracking-tight mt-3">Word Counter</h1>
-        <p className="text-stone-500 mt-1">
+        <div className="flex flex-wrap items-center gap-3">
+          <a href="/tools" className="text-sm text-stone-400 transition hover:text-stone-700">← All tools</a>
+          <PageVisitorCount page="word-counter" noun="writers" />
+        </div>
+        <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-stone-900">Word Counter</h1>
+        <p className="mt-1 text-stone-500">
           Count words, characters, sentences, and reading time in real time. Free, no login required.
         </p>
       </div>
