@@ -220,34 +220,40 @@ export async function recordAndCountVisit(input: {
 
 export type DayPoint = { day: string; visitors: number; visits: number };
 
+/** Inclusive YYYY-MM-DD bounds. */
+export type Range = { from: string; to: string };
+
 export type PageAnalytics = {
   slug: string;
   label: string;
-  /** Every view, including repeat views by the same person on the same day. */
-  totalVisits: number;
-  /** Distinct visitors ever. */
-  uniqueVisitors: number;
+  range: Range;
+
+  /* Within the selected range */
+  visitors: number;
+  visits: number;
   /**
-   * Visitors seen on more than one separate day.
+   * Visitors seen on more than one separate day inside the range.
    *
    * This is the honest definition available from what we store: we hold no
    * cookie or account, so "recurring" means the same IP and browser came back
    * on a different day. Someone on a phone whose IP changes between visits
    * counts as two new visitors, so this figure is a floor, not an exact count.
    */
-  recurringVisitors: number;
-  /** Distinct visitors today. */
+  recurring: number;
+  /** Visitors in the range whose first ever visit falls inside it. */
+  newVisitors: number;
+
+  /* All time, for context */
+  allTimeVisitors: number;
+  allTimeVisits: number;
+  allTimeRecurring: number;
+
+  /* Today */
   todayVisitors: number;
-  /** Views today. */
   todayVisits: number;
-  /** Of today's visitors, how many had been seen on an earlier day. */
   todayReturning: number;
-  /** Distinct visitors over the last 7 and 30 days. */
-  last7: number;
-  last30: number;
-  /** Per-day series, oldest first, for charting. */
+
   series: DayPoint[];
-  /** The busiest single day recorded. */
   busiestDay: DayPoint | null;
 };
 
@@ -256,8 +262,25 @@ function num(v: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
-/** Analytics for one tracked page. Days controls the length of the series. */
-export async function getPageAnalytics(slug: string, days = 30): Promise<PageAnalytics | null> {
+/** Clamp a user-supplied date to YYYY-MM-DD, falling back when malformed. */
+export function safeDay(value: unknown, fallback: string): string {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return fallback;
+  const t = Date.parse(`${value}T00:00:00Z`);
+  return Number.isFinite(t) ? value : fallback;
+}
+
+export function defaultRange(days = 30): Range {
+  return {
+    from: utcDay(new Date(Date.now() - days * DAY_MS)),
+    to: utcDay(),
+  };
+}
+
+/** Analytics for one tracked page over an inclusive day range. */
+export async function getPageAnalytics(
+  slug: string,
+  range: Range = defaultRange(),
+): Promise<PageAnalytics | null> {
   const entry = TRACKED_PAGES[slug];
   if (!entry || !hasDatabaseUrl()) return null;
 
@@ -265,87 +288,110 @@ export async function getPageAnalytics(slug: string, days = 30): Promise<PageAna
   const sql = getSql();
   const page = entry.key;
   const today = utcDay();
-  const from7 = utcDay(new Date(Date.now() - 7 * DAY_MS));
-  const from30 = utcDay(new Date(Date.now() - 30 * DAY_MS));
-  const fromSeries = utcDay(new Date(Date.now() - days * DAY_MS));
+  const { from, to } = range;
 
-  const [totals] = await sql<
-    { total_visits: string; unique_visitors: string; today_visitors: string; today_visits: string; last7: string; last30: string }[]
+  const [inRange] = await sql<{ visitors: string; visits: string }[]>`
+    SELECT
+      COUNT(DISTINCT visitor_hash)::text AS visitors,
+      COALESCE(SUM(visits), 0)::text     AS visits
+    FROM page_visitors
+    WHERE page = ${page} AND day >= ${from} AND day <= ${to}
+  `;
+
+  const [allTime] = await sql<
+    { visitors: string; visits: string; today_visitors: string; today_visits: string }[]
   >`
     SELECT
-      COALESCE(SUM(visits), 0)::text                                          AS total_visits,
-      COUNT(DISTINCT visitor_hash)::text                                      AS unique_visitors,
-      COUNT(DISTINCT visitor_hash) FILTER (WHERE day = ${today})::text        AS today_visitors,
-      COALESCE(SUM(visits) FILTER (WHERE day = ${today}), 0)::text            AS today_visits,
-      COUNT(DISTINCT visitor_hash) FILTER (WHERE day >= ${from7})::text       AS last7,
-      COUNT(DISTINCT visitor_hash) FILTER (WHERE day >= ${from30})::text      AS last30
+      COUNT(DISTINCT visitor_hash)::text                                AS visitors,
+      COALESCE(SUM(visits), 0)::text                                    AS visits,
+      COUNT(DISTINCT visitor_hash) FILTER (WHERE day = ${today})::text  AS today_visitors,
+      COALESCE(SUM(visits) FILTER (WHERE day = ${today}), 0)::text      AS today_visits
     FROM page_visitors
     WHERE page = ${page}
   `;
 
-  // Seen on two or more distinct days.
+  // Seen on 2+ distinct days inside the range.
   const [recurring] = await sql<{ n: string }[]>`
     SELECT COUNT(*)::text AS n FROM (
-      SELECT visitor_hash
-      FROM page_visitors
-      WHERE page = ${page}
+      SELECT visitor_hash FROM page_visitors
+      WHERE page = ${page} AND day >= ${from} AND day <= ${to}
+      GROUP BY visitor_hash HAVING COUNT(DISTINCT day) > 1
+    ) AS x
+  `;
+
+  const [allRecurring] = await sql<{ n: string }[]>`
+    SELECT COUNT(*)::text AS n FROM (
+      SELECT visitor_hash FROM page_visitors WHERE page = ${page}
+      GROUP BY visitor_hash HAVING COUNT(DISTINCT day) > 1
+    ) AS x
+  `;
+
+  // First-time visitors: present in the range and never seen before it.
+  const [fresh] = await sql<{ n: string }[]>`
+    SELECT COUNT(*)::text AS n FROM (
+      SELECT visitor_hash FROM page_visitors WHERE page = ${page}
       GROUP BY visitor_hash
-      HAVING COUNT(DISTINCT day) > 1
-    ) AS repeat_visitors
+      HAVING MIN(day) >= ${from} AND MIN(day) <= ${to}
+    ) AS x
   `;
 
   // Today's visitors who also appear on an earlier day.
   const [returning] = await sql<{ n: string }[]>`
     SELECT COUNT(*)::text AS n FROM (
-      SELECT visitor_hash
-      FROM page_visitors
-      WHERE page = ${page}
+      SELECT visitor_hash FROM page_visitors WHERE page = ${page}
       GROUP BY visitor_hash
       HAVING bool_or(day = ${today}) AND bool_or(day < ${today})
-    ) AS returned_today
+    ) AS x
   `;
 
-  const series = await sql<{ day: string; visitors: string; visits: string }[]>`
+  const rows = await sql<{ day: string; visitors: string; visits: string }[]>`
     SELECT day,
            COUNT(DISTINCT visitor_hash)::text AS visitors,
            COALESCE(SUM(visits), 0)::text     AS visits
     FROM page_visitors
-    WHERE page = ${page} AND day >= ${fromSeries}
-    GROUP BY day
-    ORDER BY day ASC
+    WHERE page = ${page} AND day >= ${from} AND day <= ${to}
+    GROUP BY day ORDER BY day ASC
   `;
 
-  const points: DayPoint[] = series.map((r) => ({
-    day: r.day,
-    visitors: num(r.visitors),
-    visits: num(r.visits),
-  }));
+  // Fill gaps so the chart shows quiet days rather than silently compressing
+  // them — a run of zeroes is information.
+  const byDay = new Map(rows.map((r) => [r.day, r]));
+  const series: DayPoint[] = [];
+  for (let t = Date.parse(`${from}T00:00:00Z`); t <= Date.parse(`${to}T00:00:00Z`); t += DAY_MS) {
+    const day = utcDay(new Date(t));
+    const r = byDay.get(day);
+    series.push({ day, visitors: num(r?.visitors), visits: num(r?.visits) });
+  }
 
-  const busiestDay = points.length
-    ? points.reduce((a, b) => (b.visitors > a.visitors ? b : a))
+  const withData = series.filter((p) => p.visitors > 0);
+  const busiestDay = withData.length
+    ? withData.reduce((a, b) => (b.visitors > a.visitors ? b : a))
     : null;
 
   return {
     slug,
     label: entry.label,
-    totalVisits: num(totals?.total_visits),
-    uniqueVisitors: num(totals?.unique_visitors),
-    recurringVisitors: num(recurring?.n),
-    todayVisitors: num(totals?.today_visitors),
-    todayVisits: num(totals?.today_visits),
+    range,
+    visitors: num(inRange?.visitors),
+    visits: num(inRange?.visits),
+    recurring: num(recurring?.n),
+    newVisitors: num(fresh?.n),
+    allTimeVisitors: num(allTime?.visitors),
+    allTimeVisits: num(allTime?.visits),
+    allTimeRecurring: num(allRecurring?.n),
+    todayVisitors: num(allTime?.today_visitors),
+    todayVisits: num(allTime?.today_visits),
     todayReturning: num(returning?.n),
-    last7: num(totals?.last7),
-    last30: num(totals?.last30),
-    series: points,
+    series,
     busiestDay,
   };
 }
 
 /** Analytics for every tracked page, for the admin overview. */
-export async function getAllPageAnalytics(days = 30): Promise<PageAnalytics[]> {
+export async function getAllPageAnalytics(range: Range = defaultRange()): Promise<PageAnalytics[]> {
   const out: PageAnalytics[] = [];
   for (const slug of Object.keys(TRACKED_PAGES)) {
-    const a = await getPageAnalytics(slug, days);
+    const a = await getPageAnalytics(slug, range);
     if (a) out.push(a);
   }
   return out;

@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 
 import { getCurrentSession } from "@/lib/auth/session";
 import { hasDatabaseUrl } from "@/lib/db";
-import { getAllPageAnalytics } from "@/lib/tools/visitors";
+import { getAllPageAnalytics, defaultRange } from "@/lib/tools/visitors";
 import AnalyticsClient from "./AnalyticsClient";
 
 export const metadata = { title: "Page analytics — Admin", robots: "noindex, nofollow" };
@@ -25,7 +25,8 @@ export default async function AnalyticsPage() {
     );
   }
 
-  const pages = await getAllPageAnalytics(30);
+  const range = defaultRange(30);
+  const pages = await getAllPageAnalytics(range);
 
-  return <AnalyticsClient pages={pages} />;
+  return <AnalyticsClient pages={pages} initialFrom={range.from} initialTo={range.to} />;
 }
