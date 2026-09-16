@@ -2,6 +2,8 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
+import { ToolGuide } from "@/components/pdf/ToolGuide";
+import { GUIDES } from "@/components/pdf/guides";
 
 interface ToolShellProps {
   title: string;
@@ -11,9 +13,14 @@ interface ToolShellProps {
   badge?: string;
   /** Route of this tool, e.g. "/tools/pdf/merge". Emits BreadcrumbList data. */
   path?: string;
+  /**
+   * Key into GUIDES. Renders the page's written content below the tool —
+   * without it these pages carry barely 70 unique words each.
+   */
+  guide?: keyof typeof GUIDES;
 }
 
-export function ToolShell({ title, description, icon, children, badge, path }: ToolShellProps) {
+export function ToolShell({ title, description, icon, children, badge, path, guide }: ToolShellProps) {
   return (
     <main className="bg-white min-h-screen">
       {/* Structured data mirroring the visible breadcrumb below. One place,
@@ -62,6 +69,8 @@ export function ToolShell({ title, description, icon, children, badge, path }: T
         <p className="text-xs text-stone-400 text-center mt-10">
           Processed entirely in your browser · Never uploaded · Free forever
         </p>
+
+        {guide && GUIDES[guide] && <ToolGuide {...GUIDES[guide]} />}
 
       </div>
     </main>

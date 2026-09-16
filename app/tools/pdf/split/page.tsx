@@ -73,6 +73,7 @@ export default function SplitPDFPage() {
   return (
     <ToolShell
       path="/tools/pdf/split"
+      guide="split"
       title="Split PDF"
       description="Extract individual pages or custom page ranges from a PDF file."
       icon={<Scissors size={22} />}

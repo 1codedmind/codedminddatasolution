@@ -11,6 +11,7 @@ import AdSlot from "@/components/ads/AdSlot";
 import { AD_SLOTS } from "@/lib/ads/slots";
 import AdSidebar from "@/components/ads/AdSidebar";
 import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
+import TornGuide from "@/components/tools/torn/TornGuide";
 
 export const metadata: Metadata = {
   title: "Torn Bazaar Profit Finder — Buy Low, Sell High",
@@ -121,6 +122,8 @@ export default function TornProfitPage() {
 
         <AdSidebar slot={AD_SLOTS.tornSidebar} />
       </div>
+
+      <TornGuide />
     </main>
   );
 }

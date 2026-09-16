@@ -56,6 +56,7 @@ export default function RotatePDFPage() {
   return (
     <ToolShell
       path="/tools/pdf/rotate"
+      guide="rotate"
       title="Rotate PDF"
       description="Rotate all pages in a PDF by 90°, 180°, or 270°."
       icon={<RotateCcw size={22} />}

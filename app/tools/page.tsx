@@ -209,7 +209,6 @@ const pdfTools = [
   { href: "/tools/pdf/rotate",     icon: RotateCcw, label: "Rotate PDF",   description: "Rotate all pages by 90°, 180°, or 270°." },
   { href: "/tools/pdf/jpg-to-pdf", icon: FileImage, label: "JPG to PDF",   description: "Convert JPG, PNG, or WebP images to a PDF document." },
   { href: "/tools/pdf/sign",       icon: PenLine,   label: "Sign PDF",     description: "eSign a PDF — type, draw, or upload your signature.", badge: "New" },
-  { href: "/tools/pdf/compress",   icon: Minimize2, label: "Compress PDF", description: "Reduce file size with server-side Ghostscript.", badge: "Soon" },
 ];
 
 function ToolCard({ href, icon: Icon, label, description, badge }: { href: string; icon: React.ElementType; label: string; description: string; badge?: string }) {

@@ -26,7 +26,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/tools/pdf",                 priority: 0.9, changefreq: "monthly" as const },
     { path: "/tools/pdf/merge",           priority: 0.9, changefreq: "monthly" as const },
     { path: "/tools/pdf/split",           priority: 0.9, changefreq: "monthly" as const },
-    { path: "/tools/pdf/compress",        priority: 0.9, changefreq: "monthly" as const },
     { path: "/tools/pdf/rotate",          priority: 0.8, changefreq: "monthly" as const },
     { path: "/tools/pdf/jpg-to-pdf",      priority: 0.8, changefreq: "monthly" as const },
     { path: "/tools/pdf/sign",            priority: 0.9, changefreq: "monthly" as const },

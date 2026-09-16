@@ -275,6 +275,7 @@ export default function SignPDFPage() {
   return (
     <ToolShell
       path="/tools/pdf/sign"
+      guide="sign"
       title="Sign PDF"
       description="Add your signature to a PDF — type it, draw it, or upload an image. Drag to position, then download."
       icon={<PenLine size={22} />}
